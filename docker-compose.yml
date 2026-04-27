@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-direm}
+      POSTGRES_USER: ${POSTGRES_USER:-direm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-direm}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-direm} -d ${POSTGRES_DB:-direm}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - direm_postgres_data:/var/lib/postgresql/data
+
+  bot:
+    build: .
+    command: python -m direm.bot.main
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: python -m direm.worker.main
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  direm_postgres_data:

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "direm"
+version = "0.1.0"
+description = "Telegram-first system for regular returns to intention."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "aiogram>=3.4,<4",
+  "alembic>=1.13,<2",
+  "asyncpg>=0.29,<1",
+  "pydantic-settings>=2.2,<3",
+  "SQLAlchemy>=2.0,<3",
+  "tzdata>=2024.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "aiosqlite>=0.20,<1",
+  "pytest>=8.0,<9",
+  "pytest-asyncio>=0.23,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/direm"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
