@@ -3,6 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from direm.i18n import t
 from direm.repositories.reminders import ReminderRepository
 from direm.repositories.users import UserRepository
 from direm.services.reminder_list_service import ReminderListService
@@ -15,12 +16,12 @@ router = Router(name="list")
 async def handle_list(message: Message, session: AsyncSession) -> None:
     user = await _ensure_user(message, session)
     if user is None:
-        await message.answer("DIREM needs a Telegram user profile to list reminders.")
+        await message.answer(t("ru", "common.no_profile"))
         return
 
     service = ReminderListService(ReminderRepository(session))
     items = await service.list_for_user(user)
-    await message.answer(service.render_for_user(items))
+    await message.answer(service.render_for_user(items, user.language_code))
 
 
 async def _ensure_user(message: Message, session: AsyncSession):
@@ -34,5 +35,6 @@ async def _ensure_user(message: Message, session: AsyncSession):
             chat_id=message.chat.id,
             username=message.from_user.username,
             first_name=message.from_user.first_name,
+            language_code=message.from_user.language_code,
         )
     )

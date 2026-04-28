@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from direm.bot.handlers import cancel, credits, delete, help, list, new, pause_resume, start, timezone, version
+from direm.bot.handlers import cancel, credits, delete, help, language, list, new, pause_resume, start, timezone, version
 from direm.bot.middlewares import DatabaseSessionMiddleware
 
 
@@ -11,6 +11,7 @@ def build_router() -> Router:
     router.include_router(cancel.router)
     router.include_router(start.router)
     router.include_router(help.router)
+    router.include_router(language.router)
     router.include_router(timezone.router)
     router.include_router(new.router)
     router.include_router(list.router)

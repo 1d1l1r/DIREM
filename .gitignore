@@ -8,3 +8,8 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+
+# DI-CODE local/operator reference package
+.docs-local/
+docs/DI-CODE/
+DI-CODE/

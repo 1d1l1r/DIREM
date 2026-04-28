@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from direm.db.models import User
 from direm.domain.schedules import validate_timezone
+from direm.i18n import normalize_language_code
 from direm.repositories.users import UserRepository
 
 
@@ -11,6 +12,7 @@ class TelegramUserProfile:
     chat_id: int
     username: str | None
     first_name: str | None
+    language_code: str | None = None
 
 
 class UserService:
@@ -29,6 +31,7 @@ class UserService:
                 username=profile.username,
                 first_name=profile.first_name,
                 timezone="UTC",
+                language_code=normalize_language_code(profile.language_code),
             )
 
         return await self.user_repository.update_profile(
@@ -41,3 +44,6 @@ class UserService:
     async def update_timezone(self, user: User, timezone: str) -> User:
         validated_timezone = validate_timezone(timezone)
         return await self.user_repository.update_timezone(user, validated_timezone)
+
+    async def update_language(self, user: User, language_code: str) -> User:
+        return await self.user_repository.update_language(user, normalize_language_code(language_code))

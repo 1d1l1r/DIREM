@@ -5,6 +5,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMar
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from direm.bot.states import ReminderControlFlow
+from direm.i18n import t
 from direm.repositories.reminders import ReminderRepository
 from direm.repositories.users import UserRepository
 from direm.services.reminder_control_service import ReminderControlService, ReminderSelectionError
@@ -17,13 +18,13 @@ router = Router(name="delete")
 async def handle_delete_command(message: Message, state: FSMContext, session: AsyncSession) -> None:
     user = await _ensure_user(message, session)
     if user is None:
-        await message.answer("DIREM needs a Telegram user profile to delete reminders.")
+        await message.answer(t("ru", "delete.no_profile"))
         return
 
     service = ReminderControlService(ReminderRepository(session))
     selectable = await service.list_selectable_for_user(user)
     await message.answer(
-        service.render_selection_prompt("delete", selectable, user.timezone),
+        service.render_selection_prompt(t(user.language_code, "control.delete_action"), selectable, user.timezone, user.language_code),
         reply_markup=_delete_keyboard(selectable) if selectable else None,
     )
     if selectable:
@@ -34,48 +35,46 @@ async def handle_delete_command(message: Message, state: FSMContext, session: As
 async def handle_delete_selection(message: Message, state: FSMContext, session: AsyncSession) -> None:
     user = await _ensure_user(message, session)
     if user is None:
-        await message.answer("DIREM needs a Telegram user profile to delete reminders.")
+        await message.answer(t("ru", "delete.no_profile"))
         return
 
     service = ReminderControlService(ReminderRepository(session))
     try:
         reminder = await service.select_for_user(user, message.text or "")
     except ReminderSelectionError:
-        await message.answer("Invalid reminder selection. Send a reminder number or id from the list.")
+        await message.answer(t(user.language_code, "common.invalid_selection"))
         return
 
-    await state.update_data(delete_reminder_id=reminder.id)
+    await state.update_data(delete_reminder_id=reminder.id, language_code=user.language_code)
     await state.set_state(ReminderControlFlow.waiting_delete_confirmation)
     await message.answer(
-        f"Delete reminder?\n"
-        f"Title: {reminder.title}\n"
-        f"Id: {reminder.id}\n\n"
-        "Send yes to confirm or no to cancel."
+        t(user.language_code, "delete.confirm_text", title=reminder.title, id=reminder.id)
     )
 
 
 @router.message(ReminderControlFlow.waiting_delete_confirmation)
 async def handle_delete_confirmation(message: Message, state: FSMContext, session: AsyncSession) -> None:
     answer = (message.text or "").strip().lower()
+    data = await state.get_data()
+    language_code = data.get("language_code", "ru")
     if answer in {"no", "n", "cancel"}:
         await state.clear()
-        await message.answer("Delete cancelled.")
+        await message.answer(t(language_code, "delete.cancelled"))
         return
 
     if answer not in {"yes", "y", "delete", "confirm"}:
-        await message.answer("Send yes to confirm deletion or no to cancel.")
+        await message.answer(t(language_code, "delete.confirm_hint"))
         return
 
     user = await _ensure_user(message, session)
     if user is None:
-        await message.answer("DIREM needs a Telegram user profile to delete reminders.")
+        await message.answer(t("ru", "delete.no_profile"))
         return
 
-    data = await state.get_data()
     reminder_id = data.get("delete_reminder_id")
     if reminder_id is None:
         await state.clear()
-        await message.answer("Delete selection expired. Send /delete to choose again.")
+        await message.answer(t(user.language_code, "delete.expired"))
         return
 
     service = ReminderControlService(ReminderRepository(session))
@@ -83,39 +82,37 @@ async def handle_delete_confirmation(message: Message, state: FSMContext, sessio
         reminder = await service.delete_for_user(user, str(reminder_id))
     except ReminderSelectionError:
         await state.clear()
-        await message.answer("Reminder not found for current user. Send /delete to choose again.")
+        await message.answer(t(user.language_code, "common.not_found"))
         return
 
     await state.clear()
-    await message.answer(f"Reminder deleted: {reminder.title}")
+    await message.answer(t(user.language_code, "delete.done", title=reminder.title))
 
 
 @router.callback_query(F.data.startswith("control:delete:"))
 async def handle_delete_callback(callback: CallbackQuery, state: FSMContext, session: AsyncSession) -> None:
     user = await _ensure_user_from_callback(callback, session)
     if user is None:
-        await callback.answer("DIREM needs a Telegram user profile.", show_alert=True)
+        await callback.answer(t("ru", "common.no_profile"), show_alert=True)
         return
 
     reminder_id = _parse_callback_id(callback.data)
     if reminder_id is None:
-        await callback.answer("Invalid reminder selection.", show_alert=True)
+        await callback.answer(t(user.language_code, "common.invalid_selection"), show_alert=True)
         return
 
     service = ReminderControlService(ReminderRepository(session))
     try:
         reminder = await service.select_for_user(user, str(reminder_id))
     except ReminderSelectionError:
-        await callback.answer("Reminder not found.", show_alert=True)
+        await callback.answer(t(user.language_code, "common.not_found"), show_alert=True)
         return
 
-    await state.update_data(delete_reminder_id=reminder.id)
+    await state.update_data(delete_reminder_id=reminder.id, language_code=user.language_code)
     await state.set_state(ReminderControlFlow.waiting_delete_confirmation)
     await callback.message.answer(
-        f"Delete reminder?\n"
-        f"Title: {reminder.title}\n"
-        f"Id: {reminder.id}",
-        reply_markup=_delete_confirmation_keyboard(reminder.id),
+        t(user.language_code, "delete.confirm", title=reminder.title, id=reminder.id),
+        reply_markup=_delete_confirmation_keyboard(reminder.id, user.language_code),
     )
     await callback.answer()
 
@@ -124,13 +121,13 @@ async def handle_delete_callback(callback: CallbackQuery, state: FSMContext, ses
 async def handle_delete_confirm_callback(callback: CallbackQuery, state: FSMContext, session: AsyncSession) -> None:
     user = await _ensure_user_from_callback(callback, session)
     if user is None:
-        await callback.answer("DIREM needs a Telegram user profile.", show_alert=True)
+        await callback.answer(t("ru", "common.no_profile"), show_alert=True)
         return
 
     reminder_id = _parse_callback_id(callback.data)
     if reminder_id is None:
         await state.clear()
-        await callback.answer("Invalid reminder selection.", show_alert=True)
+        await callback.answer(t(user.language_code, "common.invalid_selection"), show_alert=True)
         return
 
     service = ReminderControlService(ReminderRepository(session))
@@ -138,18 +135,19 @@ async def handle_delete_confirm_callback(callback: CallbackQuery, state: FSMCont
         reminder = await service.delete_for_user(user, str(reminder_id))
     except ReminderSelectionError:
         await state.clear()
-        await callback.answer("Reminder not found.", show_alert=True)
+        await callback.answer(t(user.language_code, "common.not_found"), show_alert=True)
         return
 
     await state.clear()
-    await callback.message.answer(f"Reminder deleted: {reminder.title}")
+    await callback.message.answer(t(user.language_code, "delete.done", title=reminder.title))
     await callback.answer()
 
 
 @router.callback_query(F.data == "control:delete_cancel")
 async def handle_delete_cancel_callback(callback: CallbackQuery, state: FSMContext) -> None:
+    data = await state.get_data()
     await state.clear()
-    await callback.message.answer("Delete cancelled.")
+    await callback.message.answer(t(data.get("language_code", "ru"), "delete.cancelled"))
     await callback.answer()
 
 
@@ -162,12 +160,12 @@ def _delete_keyboard(selectable) -> InlineKeyboardMarkup:
     )
 
 
-def _delete_confirmation_keyboard(reminder_id: int) -> InlineKeyboardMarkup:
+def _delete_confirmation_keyboard(reminder_id: int, language_code: str | None = None) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Confirm delete", callback_data=f"control:delete_confirm:{reminder_id}"),
-                InlineKeyboardButton(text="Cancel", callback_data="control:delete_cancel"),
+                InlineKeyboardButton(text=t(language_code, "delete.button_confirm"), callback_data=f"control:delete_confirm:{reminder_id}"),
+                InlineKeyboardButton(text=t(language_code, "delete.button_cancel"), callback_data="control:delete_cancel"),
             ]
         ]
     )
@@ -193,6 +191,7 @@ async def _ensure_user(message: Message, session: AsyncSession):
             chat_id=message.chat.id,
             username=message.from_user.username,
             first_name=message.from_user.first_name,
+            language_code=message.from_user.language_code,
         )
     )
 
@@ -208,5 +207,6 @@ async def _ensure_user_from_callback(callback: CallbackQuery, session: AsyncSess
             chat_id=callback.message.chat.id,
             username=callback.from_user.username,
             first_name=callback.from_user.first_name,
+            language_code=callback.from_user.language_code,
         )
     )

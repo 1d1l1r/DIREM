@@ -29,6 +29,7 @@ def test_bot_command_menu_contains_current_commands() -> None:
     assert [command.command for command in commands] == [
         "start",
         "help",
+        "language",
         "timezone",
         "new",
         "list",
@@ -41,21 +42,29 @@ def test_bot_command_menu_contains_current_commands() -> None:
     ]
 
 
-async def test_cancel_clears_active_state() -> None:
+async def test_cancel_clears_active_state(session_factory=None) -> None:
     message = FakeMessage()
     state = FakeState("CreateReminderFlow:waiting_title")
 
-    await handle_cancel(message, state)
+    class Session:
+        pass
+
+    message.from_user = None
+    await handle_cancel(message, state, Session())
 
     assert state.cleared is True
-    assert message.answers == ["Current action cancelled."]
+    assert message.answers == ["Текущее действие отменено."]
 
 
 async def test_cancel_without_active_state_is_friendly() -> None:
     message = FakeMessage()
     state = FakeState(None)
 
-    await handle_cancel(message, state)
+    class Session:
+        pass
+
+    message.from_user = None
+    await handle_cancel(message, state, Session())
 
     assert state.cleared is False
-    assert message.answers == ["Nothing to cancel. You can use /help to see available commands."]
+    assert message.answers == ["Нечего отменять. Команды можно посмотреть через /help."]

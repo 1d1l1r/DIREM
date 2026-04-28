@@ -11,6 +11,7 @@ from direm.bot.states import CreateReminderFlow
 from direm.domain.constants import ScheduleType
 from direm.domain.errors import InvalidActiveWindowError, InvalidScheduleConfigError
 from direm.domain.parsing import normalize_message_text, normalize_title, parse_active_window, parse_hh_mm_time, parse_interval_minutes
+from direm.i18n import t
 from direm.repositories.reminders import ReminderRepository
 from direm.repositories.users import UserRepository
 from direm.services.reminder_service import CreateReminderRequest, ReminderService
@@ -27,68 +28,69 @@ async def handle_new_command(message: Message, state: FSMContext, session: Async
         return
 
     await state.clear()
-    await state.update_data(user_id=user.id, timezone=user.timezone)
+    await state.update_data(user_id=user.id, timezone=user.timezone, language_code=user.language_code)
     await state.set_state(CreateReminderFlow.waiting_title)
-    await message.answer(
-        "Create reminder.\n\n"
-        "Send a short title.\n"
-        "Example: Dorpheus focus"
-    )
+    await message.answer(t(user.language_code, "new.title_prompt"))
 
 
 @router.message(CreateReminderFlow.waiting_title)
 async def handle_title(message: Message, state: FSMContext) -> None:
+    language_code = await _state_language(state)
     try:
         title = normalize_title(message.text)
     except InvalidScheduleConfigError:
-        await message.answer("Title is required. Keep it short, up to 80 characters.")
+        await message.answer(t(language_code, "new.title_invalid"))
         return
 
     await state.update_data(title=title)
     await state.set_state(CreateReminderFlow.waiting_message_text)
-    await message.answer("Send the reminder message text.")
+    await message.answer(t(language_code, "new.message_prompt"))
 
 
 @router.message(CreateReminderFlow.waiting_message_text)
 async def handle_message_text(message: Message, state: FSMContext) -> None:
+    language_code = await _state_language(state)
     try:
         message_text = normalize_message_text(message.text)
     except InvalidScheduleConfigError:
-        await message.answer("Message text is required. Keep it up to 1000 characters.")
+        await message.answer(t(language_code, "new.message_invalid"))
         return
 
     await state.update_data(message_text=message_text)
     await state.set_state(CreateReminderFlow.waiting_schedule_type)
-    await message.answer("Choose schedule type.", reply_markup=_schedule_type_keyboard())
+    await message.answer(t(language_code, "new.schedule_prompt"), reply_markup=_schedule_type_keyboard(language_code))
 
 
 @router.callback_query(CreateReminderFlow.waiting_schedule_type, F.data == "new:schedule:interval")
 async def choose_interval(callback: CallbackQuery, state: FSMContext) -> None:
+    language_code = await _state_language(state)
     await state.update_data(schedule_type=ScheduleType.INTERVAL.value, daily_time=None)
     await state.set_state(CreateReminderFlow.waiting_interval_minutes)
-    await callback.message.answer("Send interval in minutes.\nExample: 45")
+    await callback.message.answer(t(language_code, "new.interval_prompt"))
     await callback.answer()
 
 
 @router.callback_query(CreateReminderFlow.waiting_schedule_type, F.data == "new:schedule:daily")
 async def choose_daily(callback: CallbackQuery, state: FSMContext) -> None:
+    language_code = await _state_language(state)
     await state.update_data(schedule_type=ScheduleType.DAILY.value, interval_minutes=None)
     await state.set_state(CreateReminderFlow.waiting_daily_time)
-    await callback.message.answer("Send daily local time in HH:MM format.\nExamples: 09:00, 22:30")
+    await callback.message.answer(t(language_code, "new.daily_prompt"))
     await callback.answer()
 
 
 @router.message(CreateReminderFlow.waiting_schedule_type)
-async def handle_schedule_type_text(message: Message) -> None:
-    await message.answer("Use the schedule type buttons, or send /cancel to stop creating this reminder.")
+async def handle_schedule_type_text(message: Message, state: FSMContext) -> None:
+    await message.answer(t(await _state_language(state), "new.use_schedule_buttons"))
 
 
 @router.message(CreateReminderFlow.waiting_interval_minutes)
 async def handle_interval_minutes(message: Message, state: FSMContext) -> None:
+    language_code = await _state_language(state)
     try:
         interval_minutes = parse_interval_minutes(message.text)
     except InvalidScheduleConfigError:
-        await message.answer("Send a positive integer from 1 to 1440.\nExample: 45")
+        await message.answer(t(language_code, "new.interval_invalid"))
         return
 
     await state.update_data(interval_minutes=interval_minutes)
@@ -97,10 +99,11 @@ async def handle_interval_minutes(message: Message, state: FSMContext) -> None:
 
 @router.message(CreateReminderFlow.waiting_daily_time)
 async def handle_daily_time(message: Message, state: FSMContext) -> None:
+    language_code = await _state_language(state)
     try:
         daily_time = parse_hh_mm_time(message.text)
     except InvalidScheduleConfigError:
-        await message.answer("Send a valid time in HH:MM format.\nExample: 22:30")
+        await message.answer(t(language_code, "new.daily_invalid"))
         return
 
     await state.update_data(daily_time=_format_time(daily_time))
@@ -116,22 +119,24 @@ async def choose_no_active_window(callback: CallbackQuery, state: FSMContext) ->
 
 @router.callback_query(CreateReminderFlow.waiting_active_window_choice, F.data == "new:window:set")
 async def choose_set_active_window(callback: CallbackQuery, state: FSMContext) -> None:
+    language_code = await _state_language(state)
     await state.set_state(CreateReminderFlow.waiting_active_window_value)
-    await callback.message.answer("Send active window as HH:MM-HH:MM.\nExample: 10:00-18:00")
+    await callback.message.answer(t(language_code, "new.window_value_prompt"))
     await callback.answer()
 
 
 @router.message(CreateReminderFlow.waiting_active_window_choice)
-async def handle_active_window_choice_text(message: Message) -> None:
-    await message.answer("Use the active window buttons, or send /cancel to stop creating this reminder.")
+async def handle_active_window_choice_text(message: Message, state: FSMContext) -> None:
+    await message.answer(t(await _state_language(state), "new.use_window_buttons"))
 
 
 @router.message(CreateReminderFlow.waiting_active_window_value)
 async def handle_active_window_value(message: Message, state: FSMContext) -> None:
+    language_code = await _state_language(state)
     try:
         active_from, active_to = parse_active_window(message.text)
     except (InvalidActiveWindowError, InvalidScheduleConfigError):
-        await message.answer("Invalid active window. Use same-day HH:MM-HH:MM, for example: 10:00-18:00.")
+        await message.answer(t(language_code, "new.window_invalid"))
         return
 
     await state.update_data(active_from=_format_time(active_from), active_to=_format_time(active_to))
@@ -142,7 +147,7 @@ async def handle_active_window_value(message: Message, state: FSMContext) -> Non
 async def confirm_create(callback: CallbackQuery, state: FSMContext, session: AsyncSession) -> None:
     user = await _ensure_user_from_callback(callback, session)
     if user is None:
-        await callback.message.answer("DIREM needs a Telegram user profile to create reminders.")
+        await callback.message.answer(t("ru", "common.no_profile"))
         await callback.answer()
         return
 
@@ -153,34 +158,35 @@ async def confirm_create(callback: CallbackQuery, state: FSMContext, session: As
     try:
         created = await service.create_reminder(user, request)
     except InvalidScheduleConfigError:
-        await callback.message.answer("Reminder configuration is invalid. Start again with /new.")
+        await callback.message.answer(t(user.language_code, "new.invalid_config"))
         await state.clear()
         await callback.answer()
         return
 
     await state.clear()
     await callback.message.answer(
-        "Reminder created.\n"
-        f"First run: {_format_local_datetime(created.first_run_at_utc, user.timezone)}"
+        t(user.language_code, "new.created", first_run=_format_local_datetime(created.first_run_at_utc, user.timezone))
     )
     await callback.answer()
 
 
 @router.callback_query(CreateReminderFlow.waiting_confirmation, F.data == "new:confirm:cancel")
 async def cancel_create(callback: CallbackQuery, state: FSMContext) -> None:
+    language_code = await _state_language(state)
     await state.clear()
-    await callback.message.answer("Reminder creation cancelled.")
+    await callback.message.answer(t(language_code, "new.cancelled"))
     await callback.answer()
 
 
 @router.message(CreateReminderFlow.waiting_confirmation)
-async def handle_confirmation_text(message: Message) -> None:
-    await message.answer("Use the confirmation buttons, or send /cancel to stop creating this reminder.")
+async def handle_confirmation_text(message: Message, state: FSMContext) -> None:
+    await message.answer(t(await _state_language(state), "new.use_confirmation_buttons"))
 
 
 async def _ask_active_window(message: Message, state: FSMContext) -> None:
+    language_code = await _state_language(state)
     await state.set_state(CreateReminderFlow.waiting_active_window_choice)
-    await message.answer("Add active window?", reply_markup=_active_window_keyboard())
+    await message.answer(t(language_code, "new.window_prompt"), reply_markup=_active_window_keyboard(language_code))
 
 
 async def _show_confirmation(message: Message, state: FSMContext) -> None:
@@ -190,10 +196,10 @@ async def _show_confirmation(message: Message, state: FSMContext) -> None:
         text = _render_confirmation(data)
     except InvalidScheduleConfigError:
         await state.set_state(CreateReminderFlow.waiting_active_window_value)
-        await message.answer("Daily time must be inside the active window. Send another window, for example: 10:00-18:00.")
+        await message.answer(t(data.get("language_code"), "new.window_daily_invalid"))
         return
 
-    await message.answer(text, reply_markup=_confirmation_keyboard())
+    await message.answer(text, reply_markup=_confirmation_keyboard(data.get("language_code")))
 
 
 def _build_create_request(data: dict) -> CreateReminderRequest:
@@ -216,13 +222,16 @@ def _render_confirmation(data: dict) -> str:
     active_window = _format_active_window(data)
     first_run = _preview_first_run(data)
     return (
-        "Create reminder?\n\n"
-        f"Title: {data['title']}\n"
-        f"Message: {data['message_text']}\n"
-        f"Schedule: {schedule}\n"
-        f"Timezone: {data['timezone']}\n"
-        f"Active window: {active_window}\n"
-        f"First run: {first_run}"
+        t(
+            data.get("language_code"),
+            "new.confirm",
+            title=data["title"],
+            message_text=data["message_text"],
+            schedule=schedule,
+            timezone=data["timezone"],
+            active_window=active_window,
+            first_run=first_run,
+        )
     )
 
 
@@ -241,7 +250,7 @@ def _format_schedule(data: dict) -> str:
 
 def _format_active_window(data: dict) -> str:
     if not data.get("active_from"):
-        return "all day"
+        return t(data.get("language_code"), "common.all_day")
     return f"{data['active_from']}-{data['active_to']}"
 
 
@@ -253,37 +262,42 @@ def _format_time(value) -> str:
     return value.strftime("%H:%M")
 
 
-def _schedule_type_keyboard() -> InlineKeyboardMarkup:
+def _schedule_type_keyboard(language_code: str | None = None) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Interval", callback_data="new:schedule:interval"),
-                InlineKeyboardButton(text="Daily time", callback_data="new:schedule:daily"),
+                InlineKeyboardButton(text=t(language_code, "new.button_interval"), callback_data="new:schedule:interval"),
+                InlineKeyboardButton(text=t(language_code, "new.button_daily"), callback_data="new:schedule:daily"),
             ]
         ]
     )
 
 
-def _active_window_keyboard() -> InlineKeyboardMarkup:
+def _active_window_keyboard(language_code: str | None = None) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="No active window", callback_data="new:window:none"),
-                InlineKeyboardButton(text="Set active window", callback_data="new:window:set"),
+                InlineKeyboardButton(text=t(language_code, "new.button_no_window"), callback_data="new:window:none"),
+                InlineKeyboardButton(text=t(language_code, "new.button_set_window"), callback_data="new:window:set"),
             ]
         ]
     )
 
 
-def _confirmation_keyboard() -> InlineKeyboardMarkup:
+def _confirmation_keyboard(language_code: str | None = None) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Create", callback_data="new:confirm:create"),
-                InlineKeyboardButton(text="Cancel", callback_data="new:confirm:cancel"),
+                InlineKeyboardButton(text=t(language_code, "new.button_create"), callback_data="new:confirm:create"),
+                InlineKeyboardButton(text=t(language_code, "new.button_cancel"), callback_data="new:confirm:cancel"),
             ]
         ]
     )
+
+
+async def _state_language(state: FSMContext) -> str:
+    data = await state.get_data()
+    return data.get("language_code", "ru")
 
 
 async def _ensure_user(message: Message, session: AsyncSession):
@@ -297,6 +311,7 @@ async def _ensure_user(message: Message, session: AsyncSession):
             chat_id=message.chat.id,
             username=message.from_user.username,
             first_name=message.from_user.first_name,
+            language_code=message.from_user.language_code,
         )
     )
 
@@ -312,5 +327,6 @@ async def _ensure_user_from_callback(callback: CallbackQuery, session: AsyncSess
             chat_id=callback.message.chat.id,
             username=callback.from_user.username,
             first_name=callback.from_user.first_name,
+            language_code=callback.from_user.language_code,
         )
     )

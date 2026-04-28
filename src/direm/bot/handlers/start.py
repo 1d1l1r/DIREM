@@ -3,6 +3,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from direm.i18n import language_name, t
 from direm.repositories.users import UserRepository
 from direm.services.user_service import TelegramUserProfile, UserService
 
@@ -22,12 +23,10 @@ async def handle_start(message: Message, session: AsyncSession) -> None:
             chat_id=message.chat.id,
             username=message.from_user.username,
             first_name=message.from_user.first_name,
+            language_code=message.from_user.language_code,
         )
     )
 
     await message.answer(
-        "DIREM is active.\n\n"
-        "I can help you keep regular returns to intention.\n"
-        f"Current timezone: {user.timezone}\n\n"
-        "Set your local timezone with /timezone, for example: Asia/Almaty"
+        t(user.language_code, "start.text", timezone=user.timezone, language=language_name(user.language_code))
     )
