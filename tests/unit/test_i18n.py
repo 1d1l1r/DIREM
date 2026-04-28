@@ -39,3 +39,14 @@ def test_catalog_has_same_keys_for_supported_languages() -> None:
 def test_translation_uses_language_and_fallback() -> None:
     assert t("kk", "delivery.wrapper") == "Еске салу:"
     assert t("unknown", "delivery.wrapper") == "Напоминание:"
+
+
+@pytest.mark.parametrize("language_code", ["ru", "kk", "en"])
+def test_help_text_is_user_facing(language_code) -> None:
+    help_text = t(language_code, "help.text")
+
+    assert "/new" in help_text
+    assert "/delete" in help_text
+    assert "Worker" not in help_text
+    assert "webhook" not in help_text.lower()
+    assert "dashboard" not in help_text.lower()

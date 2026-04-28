@@ -29,7 +29,7 @@ Owner checklist:
 9. Send `/language`, choose Қазақша, then verify `/help` is in Kazakh.
 10. Send `/language`, choose English, then verify `/help` is in English.
 11. Send `/language`, choose Русский, then verify `/help` is in Russian.
-12. Start `/new`, then send `/cancel` and verify the flow exits.
+12. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
 13. Set `/timezone` to `Asia/Almaty`.
 14. Create a near-due reminder through `/new`.
 15. Wait for worker delivery.
@@ -43,6 +43,10 @@ Expected runtime behavior:
 
 - Telegram command menu shows current commands including `/language` and `/cancel`;
 - `/language` persists Russian, Kazakh and English interface choices;
+- `/help` is grouped by purpose and does not show internal worker/retry/dashboard/webhook notes;
+- idle state shows a localized Help reply button;
+- active FSM flows show a localized Cancel reply button;
+- Help and Cancel reply buttons behave like `/help` and `/cancel`;
 - user-authored reminder title/message text is not auto-translated;
 - `/cancel` exits active FSM flows and is friendly when nothing is active;
 - `/pause`, `/resume` and `/delete` offer inline reminder buttons while preserving manual number/id input;

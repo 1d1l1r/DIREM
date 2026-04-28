@@ -1,8 +1,9 @@
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from direm.bot.reply_keyboard import HELP_BUTTON_LABELS, idle_reply_keyboard
 from direm.i18n import t
 from direm.repositories.users import UserRepository
 from direm.services.user_service import TelegramUserProfile, UserService
@@ -13,7 +14,17 @@ router = Router(name="help")
 @router.message(Command("help"))
 async def handle_help(message: Message, session: AsyncSession) -> None:
     user = await _ensure_user(message, session)
-    await message.answer(t(user.language_code if user else "ru", "help.text"))
+    await _answer_help(message, user.language_code if user else "ru")
+
+
+@router.message(F.text.in_(HELP_BUTTON_LABELS))
+async def handle_help_button(message: Message, session: AsyncSession) -> None:
+    user = await _ensure_user(message, session)
+    await _answer_help(message, user.language_code if user else "ru")
+
+
+async def _answer_help(message: Message, language_code: str | None) -> None:
+    await message.answer(t(language_code, "help.text"), reply_markup=idle_reply_keyboard(language_code))
 
 
 async def _ensure_user(message: Message, session: AsyncSession):

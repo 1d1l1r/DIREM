@@ -6,7 +6,7 @@ class FakeMessage:
     def __init__(self) -> None:
         self.answers: list[str] = []
 
-    async def answer(self, text: str) -> None:
+    async def answer(self, text: str, **kwargs) -> None:
         self.answers.append(text)
 
 

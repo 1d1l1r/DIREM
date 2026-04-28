@@ -35,3 +35,4 @@
 - `/language` command with Russian, Kazakh and English interface choices.
 - i18n catalog foundation for current Telegram Core MVP user-facing text.
 - Localized worker delivery wrapper text without translating user-authored reminder content.
+- Pre-release Telegram UX polish for grouped `/help` text and localized Help/Cancel reply keyboard.

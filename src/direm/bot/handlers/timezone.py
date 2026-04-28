@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from direm.bot.reply_keyboard import flow_reply_keyboard, idle_reply_keyboard
 from direm.bot.states import TimezoneFlow
 from direm.domain.errors import InvalidTimezoneError
 from direm.i18n import t
@@ -22,7 +23,8 @@ async def handle_timezone_command(message: Message, state: FSMContext, session: 
 
     await state.set_state(TimezoneFlow.waiting_for_timezone)
     await message.answer(
-        t(user.language_code, "timezone.prompt", timezone=user.timezone)
+        t(user.language_code, "timezone.prompt", timezone=user.timezone),
+        reply_markup=flow_reply_keyboard(user.language_code),
     )
 
 
@@ -43,7 +45,7 @@ async def handle_timezone_input(message: Message, state: FSMContext, session: As
         return
 
     await state.clear()
-    await message.answer(t(user.language_code, "timezone.updated", timezone=user.timezone))
+    await message.answer(t(user.language_code, "timezone.updated", timezone=user.timezone), reply_markup=idle_reply_keyboard(user.language_code))
 
 
 async def _ensure_user(message: Message, session: AsyncSession):

@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from direm.bot.reply_keyboard import flow_reply_keyboard, idle_reply_keyboard
 from direm.bot.states import ReminderControlFlow
 from direm.i18n import t
 from direm.repositories.reminders import ReminderRepository
@@ -25,10 +26,11 @@ async def handle_delete_command(message: Message, state: FSMContext, session: As
     selectable = await service.list_selectable_for_user(user)
     await message.answer(
         service.render_selection_prompt(t(user.language_code, "control.delete_action"), selectable, user.timezone, user.language_code),
-        reply_markup=_delete_keyboard(selectable) if selectable else None,
+        reply_markup=_delete_keyboard(selectable) if selectable else idle_reply_keyboard(user.language_code),
     )
     if selectable:
         await state.set_state(ReminderControlFlow.waiting_delete_selection)
+        await message.answer(t(user.language_code, "keyboard.cancel_hint"), reply_markup=flow_reply_keyboard(user.language_code))
 
 
 @router.message(ReminderControlFlow.waiting_delete_selection)
@@ -48,7 +50,8 @@ async def handle_delete_selection(message: Message, state: FSMContext, session: 
     await state.update_data(delete_reminder_id=reminder.id, language_code=user.language_code)
     await state.set_state(ReminderControlFlow.waiting_delete_confirmation)
     await message.answer(
-        t(user.language_code, "delete.confirm_text", title=reminder.title, id=reminder.id)
+        t(user.language_code, "delete.confirm_text", title=reminder.title, id=reminder.id),
+        reply_markup=flow_reply_keyboard(user.language_code),
     )
 
 
@@ -59,7 +62,7 @@ async def handle_delete_confirmation(message: Message, state: FSMContext, sessio
     language_code = data.get("language_code", "ru")
     if answer in {"no", "n", "cancel"}:
         await state.clear()
-        await message.answer(t(language_code, "delete.cancelled"))
+        await message.answer(t(language_code, "delete.cancelled"), reply_markup=idle_reply_keyboard(language_code))
         return
 
     if answer not in {"yes", "y", "delete", "confirm"}:
@@ -74,7 +77,7 @@ async def handle_delete_confirmation(message: Message, state: FSMContext, sessio
     reminder_id = data.get("delete_reminder_id")
     if reminder_id is None:
         await state.clear()
-        await message.answer(t(user.language_code, "delete.expired"))
+        await message.answer(t(user.language_code, "delete.expired"), reply_markup=idle_reply_keyboard(user.language_code))
         return
 
     service = ReminderControlService(ReminderRepository(session))
@@ -82,11 +85,11 @@ async def handle_delete_confirmation(message: Message, state: FSMContext, sessio
         reminder = await service.delete_for_user(user, str(reminder_id))
     except ReminderSelectionError:
         await state.clear()
-        await message.answer(t(user.language_code, "common.not_found"))
+        await message.answer(t(user.language_code, "common.not_found"), reply_markup=idle_reply_keyboard(user.language_code))
         return
 
     await state.clear()
-    await message.answer(t(user.language_code, "delete.done", title=reminder.title))
+    await message.answer(t(user.language_code, "delete.done", title=reminder.title), reply_markup=idle_reply_keyboard(user.language_code))
 
 
 @router.callback_query(F.data.startswith("control:delete:"))
@@ -139,7 +142,7 @@ async def handle_delete_confirm_callback(callback: CallbackQuery, state: FSMCont
         return
 
     await state.clear()
-    await callback.message.answer(t(user.language_code, "delete.done", title=reminder.title))
+    await callback.message.answer(t(user.language_code, "delete.done", title=reminder.title), reply_markup=idle_reply_keyboard(user.language_code))
     await callback.answer()
 
 
@@ -147,7 +150,8 @@ async def handle_delete_confirm_callback(callback: CallbackQuery, state: FSMCont
 async def handle_delete_cancel_callback(callback: CallbackQuery, state: FSMContext) -> None:
     data = await state.get_data()
     await state.clear()
-    await callback.message.answer(t(data.get("language_code", "ru"), "delete.cancelled"))
+    language_code = data.get("language_code", "ru")
+    await callback.message.answer(t(language_code, "delete.cancelled"), reply_markup=idle_reply_keyboard(language_code))
     await callback.answer()
 
 
