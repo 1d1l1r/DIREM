@@ -6,6 +6,7 @@ from direm.db.models import Reminder
 from direm.domain.constants import DeliveryStatus
 from direm.domain.errors import InvalidScheduleConfigError
 from direm.domain.schedules import compute_next_after_due
+from direm.i18n import t
 from direm.repositories.deliveries import ReminderDeliveryRepository
 from direm.repositories.reminders import ReminderRepository
 
@@ -83,4 +84,4 @@ class ReminderDeliveryService:
             raise
 
     def _render_message(self, reminder: Reminder) -> str:
-        return f"{reminder.title}\n\n{reminder.message_text}"
+        return f"{t(reminder.user.language_code, 'delivery.wrapper')}\n{reminder.title}\n\n{reminder.message_text}"

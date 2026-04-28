@@ -5,6 +5,7 @@ from direm.db.models import Reminder, User
 from direm.domain.constants import ReminderStatus, ScheduleType
 from direm.domain.errors import InvalidScheduleConfigError
 from direm.domain.schedules import compute_next_daily_run, compute_next_interval_run
+from direm.i18n import t
 from direm.repositories.reminders import ReminderRepository
 from direm.services.reminder_list_service import ReminderListItem
 
@@ -29,27 +30,27 @@ class ReminderControlService:
             reminders = [reminder for reminder in reminders if reminder.status == status]
         return [SelectableReminder(public_number=index, reminder=reminder) for index, reminder in enumerate(reminders, start=1)]
 
-    def render_selection_prompt(self, action: str, selectable: list[SelectableReminder], timezone: str) -> str:
+    def render_selection_prompt(self, action: str, selectable: list[SelectableReminder], timezone: str, language_code: str = "en") -> str:
         if not selectable:
-            return "No reminders yet.\nCreate one with /new."
+            return t(language_code, "list.empty")
 
-        lines = [f"Choose reminder to {action}.", "Send its number or id.", ""]
+        lines = [t(language_code, "control.choose", action=action), t(language_code, "control.send_number"), ""]
         for item in selectable:
             reminder = item.reminder
             list_item = ReminderListItem(
                 title=reminder.title,
                 schedule=_format_schedule(reminder),
-                active_window=_format_active_window(reminder.active_from, reminder.active_to),
-                next_run_at=_format_next_run_at(reminder.next_run_at, timezone),
+                active_window=_format_active_window(reminder.active_from, reminder.active_to, language_code),
+                next_run_at=_format_next_run_at(reminder.next_run_at, timezone, language_code),
                 status=reminder.status,
             )
             lines.extend(
                 [
                     f"{item.public_number}. {list_item.title} (id: {reminder.id})",
-                    f"Status: {list_item.status}",
-                    f"Schedule: {list_item.schedule}",
-                    f"Active window: {list_item.active_window}",
-                    f"Next run: {list_item.next_run_at}",
+                    f"{t(language_code, 'common.status')}: {list_item.status}",
+                    f"{t(language_code, 'common.schedule')}: {list_item.schedule}",
+                    f"{t(language_code, 'common.active_window')}: {list_item.active_window}",
+                    f"{t(language_code, 'common.next_run')}: {list_item.next_run_at}",
                     "",
                 ]
             )

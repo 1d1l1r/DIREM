@@ -21,7 +21,7 @@ class FakeMessage:
 
 class FakeCallback:
     def __init__(self) -> None:
-        self.from_user = SimpleNamespace(id=1001, username="ilya", first_name="Ilya")
+        self.from_user = SimpleNamespace(id=1001, username="ilya", first_name="Ilya", language_code="en")
         self.message = FakeMessage()
         self.answered = False
 

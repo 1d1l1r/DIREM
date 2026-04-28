@@ -39,6 +39,41 @@ async def test_register_creates_user_with_default_utc_timezone(session_factory) 
         assert user.username == "first"
         assert user.first_name == "First"
         assert user.timezone == "UTC"
+        assert user.language_code == "ru"
+
+
+async def test_register_uses_supported_telegram_language(session_factory) -> None:
+    async with session_factory() as session:
+        service = UserService(UserRepository(session))
+
+        user = await service.register_or_update_from_telegram(
+            TelegramUserProfile(
+                telegram_user_id=1001,
+                chat_id=2001,
+                username="first",
+                first_name="First",
+                language_code="kk",
+            )
+        )
+
+        assert user.language_code == "kk"
+
+
+async def test_register_falls_back_to_ru_for_unsupported_language(session_factory) -> None:
+    async with session_factory() as session:
+        service = UserService(UserRepository(session))
+
+        user = await service.register_or_update_from_telegram(
+            TelegramUserProfile(
+                telegram_user_id=1001,
+                chat_id=2001,
+                username="first",
+                first_name="First",
+                language_code="de",
+            )
+        )
+
+        assert user.language_code == "ru"
 
 
 async def test_repeated_start_preserves_timezone_and_does_not_duplicate(session_factory) -> None:
@@ -54,6 +89,7 @@ async def test_repeated_start_preserves_timezone_and_does_not_duplicate(session_
             )
         )
         await service.update_timezone(user, "Asia/Almaty")
+        await service.update_language(user, "en")
 
         updated = await service.register_or_update_from_telegram(
             TelegramUserProfile(
@@ -74,6 +110,7 @@ async def test_repeated_start_preserves_timezone_and_does_not_duplicate(session_
         assert updated.username == "second"
         assert updated.first_name == "Second"
         assert updated.timezone == "Asia/Almaty"
+        assert updated.language_code == "en"
 
 
 async def test_update_timezone_accepts_valid_iana_timezone(session_factory) -> None:

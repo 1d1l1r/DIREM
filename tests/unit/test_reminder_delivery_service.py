@@ -93,7 +93,7 @@ async def test_delivers_due_active_reminder_and_advances_next_run(session_factor
 
         deliveries = await list_deliveries(session)
         assert delivered == 1
-        assert sender.sent_messages == [(user.chat_id, "Focus\n\nReturn to intention.")]
+        assert sender.sent_messages == [(user.chat_id, "Напоминание:\nFocus\n\nReturn to intention.")]
         assert deliveries[0].reminder_id == reminder.id
         assert deliveries[0].status == DeliveryStatus.SENT.value
         assert deliveries[0].sent_at == now.replace(tzinfo=None)
@@ -185,3 +185,26 @@ async def test_daily_delivery_uses_user_timezone_for_next_run(session_factory) -
 
         assert delivered == 1
         assert reminder.next_run_at == datetime(2026, 4, 27, 5, 0, tzinfo=UTC)
+
+
+async def test_delivery_wrapper_uses_user_language(session_factory) -> None:
+    async with session_factory() as session:
+        now = datetime(2026, 4, 27, 12, 0, tzinfo=UTC)
+        user = await create_user(session, 1001)
+        user.language_code = "kk"
+        await create_reminder(
+            session,
+            user,
+            title="Ниет",
+            status=ReminderStatus.ACTIVE.value,
+            next_run_at=datetime(2026, 4, 27, 11, 0, tzinfo=UTC),
+        )
+        sender = FakeSender()
+
+        await ReminderDeliveryService(
+            ReminderRepository(session),
+            ReminderDeliveryRepository(session),
+            sender,
+        ).deliver_due_once(now_utc=now)
+
+        assert sender.sent_messages == [(user.chat_id, "Еске салу:\nНиет\n\nReturn to intention.")]

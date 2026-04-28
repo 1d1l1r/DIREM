@@ -4,7 +4,7 @@ DIREM is a Telegram-first system for regular returns to intention.
 
 Current target: `DIREM v0.1.0 — Core MVP`.
 
-This repository currently contains the DIREM shell plus the domain foundation: bot shell, worker delivery MVP, PostgreSQL, SQLAlchemy 2, Alembic, version metadata, credits metadata, user registration, persisted user timezones, `/new` reminder record creation, `/list` reminder record viewing, `/pause` and `/resume` status updates, `/delete` reminder record deletion, domain constants, database models for users/reminders/deliveries/user states, and tested schedule calculation functions.
+This repository currently contains the DIREM shell plus the domain foundation: bot shell, worker delivery MVP, PostgreSQL, SQLAlchemy 2, Alembic, version metadata, credits metadata, user registration, persisted user timezones and languages, `/new` reminder record creation, `/list` reminder record viewing, `/pause` and `/resume` status updates, `/delete` reminder record deletion, domain constants, database models for users/reminders/deliveries/user states, and tested schedule calculation functions.
 
 Reminder delivery is now implemented as a basic MVP: the worker polls for due active reminders, sends them to the user's persisted Telegram chat, records success or failure, and advances `next_run_at` after successful sends. Retries, delivery history commands, dashboards and webhook mode are intentionally not implemented.
 
@@ -73,6 +73,7 @@ Available in this skeleton:
 
 - `/start`
 - `/help`
+- `/language`
 - `/timezone`
 - `/new`
 - `/list`
@@ -86,6 +87,7 @@ Available in this skeleton:
 Not implemented yet:
 
 - retry scheduler
+- AI translation
 - delivery history command
 - delivery dashboard
 - webhook mode
@@ -112,8 +114,9 @@ Implemented as persisted user setup:
 - `/start` creates or updates a Telegram user record
 - repeated `/start` preserves the existing timezone
 - `/timezone` stores a validated IANA timezone such as `Asia/Almaty`
+- `/language` stores a selected interface language
 
-Users can now persist an IANA timezone.
+Users can now persist an IANA timezone and interface language. Supported interface languages are Russian, Kazakh and English. User-authored reminder titles and message text are not auto-translated.
 
 Implemented reminder creation:
 
@@ -133,8 +136,9 @@ Implemented worker delivery MVP:
 - successful sends create `reminder_deliveries` records
 - failed sends are logged and recorded without crashing the worker
 - successful sends advance `next_run_at` using the user's timezone and domain schedule functions
+- delivery message wrapper text uses the user's selected interface language
 
-Retries, delivery history commands, dashboards and webhook mode are still not implemented.
+Retries, AI translation, delivery history commands, dashboards and webhook mode are still not implemented.
 
 ## Release Readiness
 
@@ -157,21 +161,26 @@ Runtime smoke summary:
 5. Run `docker compose run --rm bot alembic upgrade head`.
 6. Restart runtime services after migrations: `docker compose restart bot worker`.
 7. Send `/start`.
-8. Check that Telegram shows the command menu with `/cancel`.
-9. Start `/new`, then send `/cancel` and verify the flow exits.
-10. Set `/timezone` to `Asia/Almaty`.
-11. Create a near-due reminder through `/new`.
-12. Wait for worker delivery.
-13. Check `/list` and verify `next_run_at` advanced.
-14. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
-15. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
-16. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
-17. Verify the deleted reminder disappears from `/list`.
+8. Check that Telegram shows the command menu with `/language` and `/cancel`.
+9. Send `/language`, choose Қазақша, then verify `/help` is in Kazakh.
+10. Send `/language`, choose English, then verify `/help` is in English.
+11. Send `/language`, choose Русский, then verify `/help` is in Russian.
+12. Start `/new`, then send `/cancel` and verify the flow exits.
+13. Set `/timezone` to `Asia/Almaty`.
+14. Create a near-due reminder through `/new`.
+15. Wait for worker delivery.
+16. Check `/list` and verify `next_run_at` advanced.
+17. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
+18. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
+19. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
+20. Verify the deleted reminder disappears from `/list`.
 
 Expected:
 
 - bot answers available shell and setup commands;
-- Telegram command menu shows current commands including `/cancel`;
+- Telegram command menu shows current commands including `/language` and `/cancel`;
+- `/language` changes persisted interface language between Russian, Kazakh and English;
+- reminder title/message text is not auto-translated;
 - `/cancel` exits active FSM flows and is friendly when nothing is active;
 - `/new` can create a reminder record;
 - `/list` shows reminder records for the current Telegram user;

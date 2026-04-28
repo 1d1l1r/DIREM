@@ -4,6 +4,7 @@ from aiogram.types import BotCommand
 COMMANDS: tuple[tuple[str, str], ...] = (
     ("start", "Open DIREM"),
     ("help", "Show help"),
+    ("language", "Choose language"),
     ("timezone", "View or set timezone"),
     ("new", "Create reminder"),
     ("list", "Show reminders"),

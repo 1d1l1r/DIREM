@@ -20,6 +20,7 @@ class UserRepository(Repository[User]):
         username: str | None,
         first_name: str | None,
         timezone: str = "UTC",
+        language_code: str = "ru",
     ) -> User:
         user = User(
             telegram_user_id=telegram_user_id,
@@ -27,6 +28,7 @@ class UserRepository(Repository[User]):
             username=username,
             first_name=first_name,
             timezone=timezone,
+            language_code=language_code,
         )
         self.session.add(user)
         await self.session.flush()
@@ -48,5 +50,10 @@ class UserRepository(Repository[User]):
 
     async def update_timezone(self, user: User, timezone: str) -> User:
         user.timezone = timezone
+        await self.session.flush()
+        return user
+
+    async def update_language(self, user: User, language_code: str) -> User:
+        user.language_code = language_code
         await self.session.flush()
         return user

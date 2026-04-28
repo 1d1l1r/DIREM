@@ -31,3 +31,7 @@
 - User-facing fallback messages for text input in `/new` button-only steps.
 - Inline reminder control buttons for `/pause`, `/resume` and `/delete`.
 - Inline delete confirmation while preserving manual number/id fallback.
+- Persisted per-user language selection with `users.language_code`.
+- `/language` command with Russian, Kazakh and English interface choices.
+- i18n catalog foundation for current Telegram Core MVP user-facing text.
+- Localized worker delivery wrapper text without translating user-authored reminder content.

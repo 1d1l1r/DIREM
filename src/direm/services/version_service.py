@@ -1,5 +1,6 @@
 from direm.app.config import Settings
 from direm.app.version import UNKNOWN, VersionMetadata
+from direm.i18n import t
 
 
 def build_version_metadata(settings: Settings, db_migration: str | None = None) -> VersionMetadata:
@@ -12,13 +13,13 @@ def build_version_metadata(settings: Settings, db_migration: str | None = None) 
     )
 
 
-def render_version(metadata: VersionMetadata) -> str:
+def render_version(metadata: VersionMetadata, language_code: str = "en") -> str:
     return "\n".join(
         [
             f"DIREM v{metadata.version}",
-            f"Commit: {metadata.commit_sha}",
-            f"Build: {metadata.build_date}",
-            f"Environment: {metadata.environment}",
-            f"DB migration: {metadata.db_migration}",
+            f"{t(language_code, 'version.commit')}: {metadata.commit_sha}",
+            f"{t(language_code, 'version.build')}: {metadata.build_date}",
+            f"{t(language_code, 'version.environment')}: {metadata.environment}",
+            f"{t(language_code, 'version.db_migration')}: {metadata.db_migration}",
         ]
     )

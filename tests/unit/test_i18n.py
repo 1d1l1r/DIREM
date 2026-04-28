@@ -1,0 +1,41 @@
+import pytest
+
+from direm.i18n import language_name, normalize_language_code, supported_language_codes, t
+from direm.i18n.catalog import CATALOG
+
+
+def test_supported_language_codes_are_locked() -> None:
+    assert supported_language_codes() == ("ru", "kk", "en")
+
+
+@pytest.mark.parametrize(
+    ("input_code", "expected"),
+    [
+        ("ru", "ru"),
+        ("kk", "kk"),
+        ("en", "en"),
+        ("en-US", "en"),
+        ("de", "ru"),
+        (None, "ru"),
+    ],
+)
+def test_normalize_language_code(input_code, expected) -> None:
+    assert normalize_language_code(input_code) == expected
+
+
+def test_language_names_match_buttons() -> None:
+    assert language_name("ru") == "🇷🇺 Русский"
+    assert language_name("kk") == "🇰🇿 Қазақша"
+    assert language_name("en") == "🇬🇧 English"
+
+
+def test_catalog_has_same_keys_for_supported_languages() -> None:
+    keys = set(CATALOG["ru"])
+    assert keys
+    assert set(CATALOG["kk"]) == keys
+    assert set(CATALOG["en"]) == keys
+
+
+def test_translation_uses_language_and_fallback() -> None:
+    assert t("kk", "delivery.wrapper") == "Еске салу:"
+    assert t("unknown", "delivery.wrapper") == "Напоминание:"

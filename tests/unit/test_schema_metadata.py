@@ -6,6 +6,10 @@ def test_domain_tables_are_registered() -> None:
     assert {"users", "reminders", "reminder_deliveries", "user_states"}.issubset(Base.metadata.tables)
 
 
+def test_users_table_has_language_code() -> None:
+    assert "language_code" in User.__table__.columns
+
+
 def test_reminders_table_has_foundation_columns() -> None:
     columns = Reminder.__table__.columns
 
