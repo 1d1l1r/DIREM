@@ -1,0 +1,47 @@
+from types import SimpleNamespace
+
+from direm.bot.handlers.help import handle_help_button
+from direm.bot.reply_keyboard import CANCEL_BUTTON_LABELS, HELP_BUTTON_LABELS, flow_reply_keyboard, idle_reply_keyboard
+
+
+class FakeMessage:
+    def __init__(self, text: str = "Help") -> None:
+        self.text = text
+        self.from_user = None
+        self.chat = SimpleNamespace(id=2001)
+        self.answers: list[tuple[str, object | None]] = []
+
+    async def answer(self, text: str, **kwargs) -> None:
+        self.answers.append((text, kwargs.get("reply_markup")))
+
+
+class Session:
+    pass
+
+
+def test_reply_keyboard_labels_are_localized() -> None:
+    assert HELP_BUTTON_LABELS == ("Помощь", "Көмек", "Help")
+    assert CANCEL_BUTTON_LABELS == ("Отмена", "Болдырмау", "Cancel")
+
+
+def test_idle_reply_keyboard_shows_help_button() -> None:
+    keyboard = idle_reply_keyboard("kk")
+
+    assert keyboard.keyboard[0][0].text == "Көмек"
+    assert keyboard.resize_keyboard is True
+
+
+def test_flow_reply_keyboard_shows_cancel_button() -> None:
+    keyboard = flow_reply_keyboard("en")
+
+    assert keyboard.keyboard[0][0].text == "Cancel"
+    assert keyboard.resize_keyboard is True
+
+
+async def test_help_button_renders_same_help_with_idle_keyboard() -> None:
+    message = FakeMessage("Help")
+
+    await handle_help_button(message, Session())
+
+    assert "Создание и просмотр:" in message.answers[0][0]
+    assert message.answers[0][1].keyboard[0][0].text == "Помощь"

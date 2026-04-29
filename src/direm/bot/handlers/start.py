@@ -3,6 +3,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from direm.bot.reply_keyboard import idle_reply_keyboard
 from direm.i18n import language_name, t
 from direm.repositories.users import UserRepository
 from direm.services.user_service import TelegramUserProfile, UserService
@@ -28,5 +29,6 @@ async def handle_start(message: Message, session: AsyncSession) -> None:
     )
 
     await message.answer(
-        t(user.language_code, "start.text", timezone=user.timezone, language=language_name(user.language_code))
+        t(user.language_code, "start.text", timezone=user.timezone, language=language_name(user.language_code)),
+        reply_markup=idle_reply_keyboard(user.language_code),
     )

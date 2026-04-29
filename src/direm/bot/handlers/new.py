@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from direm.bot.reply_keyboard import flow_reply_keyboard, idle_reply_keyboard
 from direm.bot.states import CreateReminderFlow
 from direm.domain.constants import ScheduleType
 from direm.domain.errors import InvalidActiveWindowError, InvalidScheduleConfigError
@@ -30,7 +31,7 @@ async def handle_new_command(message: Message, state: FSMContext, session: Async
     await state.clear()
     await state.update_data(user_id=user.id, timezone=user.timezone, language_code=user.language_code)
     await state.set_state(CreateReminderFlow.waiting_title)
-    await message.answer(t(user.language_code, "new.title_prompt"))
+    await message.answer(t(user.language_code, "new.title_prompt"), reply_markup=flow_reply_keyboard(user.language_code))
 
 
 @router.message(CreateReminderFlow.waiting_title)
@@ -66,7 +67,7 @@ async def choose_interval(callback: CallbackQuery, state: FSMContext) -> None:
     language_code = await _state_language(state)
     await state.update_data(schedule_type=ScheduleType.INTERVAL.value, daily_time=None)
     await state.set_state(CreateReminderFlow.waiting_interval_minutes)
-    await callback.message.answer(t(language_code, "new.interval_prompt"))
+    await callback.message.answer(t(language_code, "new.interval_prompt"), reply_markup=flow_reply_keyboard(language_code))
     await callback.answer()
 
 
@@ -75,7 +76,7 @@ async def choose_daily(callback: CallbackQuery, state: FSMContext) -> None:
     language_code = await _state_language(state)
     await state.update_data(schedule_type=ScheduleType.DAILY.value, interval_minutes=None)
     await state.set_state(CreateReminderFlow.waiting_daily_time)
-    await callback.message.answer(t(language_code, "new.daily_prompt"))
+    await callback.message.answer(t(language_code, "new.daily_prompt"), reply_markup=flow_reply_keyboard(language_code))
     await callback.answer()
 
 
@@ -121,7 +122,7 @@ async def choose_no_active_window(callback: CallbackQuery, state: FSMContext) ->
 async def choose_set_active_window(callback: CallbackQuery, state: FSMContext) -> None:
     language_code = await _state_language(state)
     await state.set_state(CreateReminderFlow.waiting_active_window_value)
-    await callback.message.answer(t(language_code, "new.window_value_prompt"))
+    await callback.message.answer(t(language_code, "new.window_value_prompt"), reply_markup=flow_reply_keyboard(language_code))
     await callback.answer()
 
 
@@ -158,14 +159,15 @@ async def confirm_create(callback: CallbackQuery, state: FSMContext, session: As
     try:
         created = await service.create_reminder(user, request)
     except InvalidScheduleConfigError:
-        await callback.message.answer(t(user.language_code, "new.invalid_config"))
         await state.clear()
+        await callback.message.answer(t(user.language_code, "new.invalid_config"), reply_markup=idle_reply_keyboard(user.language_code))
         await callback.answer()
         return
 
     await state.clear()
     await callback.message.answer(
-        t(user.language_code, "new.created", first_run=_format_local_datetime(created.first_run_at_utc, user.timezone))
+        t(user.language_code, "new.created", first_run=_format_local_datetime(created.first_run_at_utc, user.timezone)),
+        reply_markup=idle_reply_keyboard(user.language_code),
     )
     await callback.answer()
 
@@ -174,7 +176,7 @@ async def confirm_create(callback: CallbackQuery, state: FSMContext, session: As
 async def cancel_create(callback: CallbackQuery, state: FSMContext) -> None:
     language_code = await _state_language(state)
     await state.clear()
-    await callback.message.answer(t(language_code, "new.cancelled"))
+    await callback.message.answer(t(language_code, "new.cancelled"), reply_markup=idle_reply_keyboard(language_code))
     await callback.answer()
 
 

@@ -4,6 +4,7 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from direm.app.config import get_settings
+from direm.bot.reply_keyboard import idle_reply_keyboard
 from direm.repositories.users import UserRepository
 from direm.services.user_service import TelegramUserProfile, UserService
 from direm.services.version_service import build_version_metadata, render_version
@@ -14,8 +15,9 @@ router = Router(name="version")
 @router.message(Command("version"))
 async def handle_version(message: Message, session: AsyncSession) -> None:
     user = await _ensure_user(message, session)
+    language_code = user.language_code if user else "ru"
     metadata = build_version_metadata(get_settings())
-    await message.answer(render_version(metadata, user.language_code if user else "ru"))
+    await message.answer(render_version(metadata, language_code), reply_markup=idle_reply_keyboard(language_code))
 
 
 async def _ensure_user(message: Message, session: AsyncSession):
