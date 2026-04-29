@@ -43,5 +43,5 @@ async def test_help_button_renders_same_help_with_idle_keyboard() -> None:
 
     await handle_help_button(message, Session())
 
-    assert "Создание и просмотр:" in message.answers[0][0]
+    assert "Основное:" in message.answers[0][0]
     assert message.answers[0][1].keyboard[0][0].text == "Помощь"
