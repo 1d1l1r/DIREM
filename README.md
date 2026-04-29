@@ -4,7 +4,7 @@ DIREM is a Telegram-first system for regular returns to intention.
 
 Current target: `DIREM v0.1.0 — Core MVP`.
 
-This repository currently contains the DIREM shell plus the domain foundation: bot shell, worker delivery MVP, PostgreSQL, SQLAlchemy 2, Alembic, version metadata, credits metadata, user registration, persisted user timezones and languages, `/new` reminder record creation, `/list` reminder record viewing, `/pause` and `/resume` status updates, `/delete` reminder record deletion, domain constants, database models for users/reminders/deliveries/user states, and tested schedule calculation functions.
+This repository currently contains the DIREM Core MVP: bot service, worker delivery MVP, PostgreSQL, SQLAlchemy 2, Alembic, version metadata, credits metadata, user registration, persisted user timezones and languages, `/new` reminder record creation, `/list` reminder record viewing, `/pause` and `/resume` status updates, `/delete` reminder record deletion, domain constants, database models for users/reminders/deliveries/user states, and tested schedule calculation functions.
 
 Reminder delivery is now implemented as a basic MVP: the worker polls for due active reminders, sends them to the user's persisted Telegram chat, records success or failure, and advances `next_run_at` after successful sends. Retries, delivery history commands, dashboards and webhook mode are intentionally not implemented.
 
@@ -69,7 +69,7 @@ These tables support persisted reminder creation and basic worker delivery recor
 
 ## Bot Commands
 
-Available in this skeleton:
+Available in this Core MVP:
 
 - `/start`
 - `/help`
@@ -91,6 +91,7 @@ Not implemented yet:
 - delivery history command
 - delivery dashboard
 - webhook mode
+- reminder editing
 
 Implemented as schema foundation only:
 
@@ -138,7 +139,7 @@ Implemented worker delivery MVP:
 - successful sends advance `next_run_at` using the user's timezone and domain schedule functions
 - delivery message wrapper text uses the user's selected interface language
 
-Retries, AI translation, delivery history commands, dashboards and webhook mode are still not implemented.
+Retries, AI translation, delivery history commands, dashboards, webhook mode and reminder editing are still not implemented.
 
 ## Release Readiness
 
@@ -165,7 +166,7 @@ Runtime smoke summary:
 9. Send `/language`, choose Қазақша, then verify `/help` is in Kazakh.
 10. Send `/language`, choose English, then verify `/help` is in English.
 11. Send `/language`, choose Русский, then verify `/help` is in Russian.
-12. Start `/new`, then send `/cancel` and verify the flow exits.
+12. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
 13. Set `/timezone` to `Asia/Almaty`.
 14. Create a near-due reminder through `/new`.
 15. Wait for worker delivery.
@@ -187,7 +188,7 @@ Expected:
 - `/pause` and `/resume` inline buttons update reminder status for the current Telegram user;
 - `/delete` inline confirmation removes reminder records from the current Telegram user's list;
 - worker sends due active reminders with basic MVP delivery behavior;
-- worker does not implement retries, delivery history commands or dashboards;
+- worker does not implement retries, delivery history commands, dashboards or webhook mode;
 - db container stays healthy;
 - logs do not print the Telegram token.
 
