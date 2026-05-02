@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- Lightweight localized first-run onboarding after `/start`.
+
 ## [0.1.0] - 2026-04-29
 
 ### Added
