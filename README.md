@@ -4,7 +4,7 @@ DIREM is a Telegram-first system for regular returns to intention.
 
 Current target: `DIREM v0.1.0 — Core MVP`.
 
-This repository currently contains the DIREM Core MVP: bot service, worker delivery MVP, PostgreSQL, SQLAlchemy 2, Alembic, version metadata, credits metadata, user registration, persisted user timezones and languages, `/new` reminder record creation, `/list` reminder record viewing, `/pause` and `/resume` status updates, `/delete` reminder record deletion, domain constants, database models for users/reminders/deliveries/user states, and tested schedule calculation functions.
+This repository currently contains the DIREM Core MVP: bot service, worker delivery MVP, PostgreSQL, SQLAlchemy 2, Alembic, version metadata, credits metadata, user registration with lightweight first-run guidance, persisted user timezones and languages, `/new` reminder record creation, `/list` reminder record viewing, `/pause` and `/resume` status updates, `/delete` reminder record deletion, domain constants, database models for users/reminders/deliveries/user states, and tested schedule calculation functions.
 
 Reminder delivery is now implemented as a basic MVP: the worker polls for due active reminders, sends them to the user's persisted Telegram chat, records success or failure, and advances `next_run_at` after successful sends. Retries, delivery history commands, dashboards and webhook mode are intentionally not implemented.
 
@@ -113,6 +113,7 @@ These functions are tested and used by `/new` and the worker delivery MVP to cal
 Implemented as persisted user setup:
 
 - `/start` creates or updates a Telegram user record
+- first-time `/start` shows lightweight guidance toward `/language`, `/timezone`, `/new` and `/help`
 - repeated `/start` preserves the existing timezone
 - `/timezone` stores a validated IANA timezone such as `Asia/Almaty`
 - `/language` stores a selected interface language
@@ -162,23 +163,25 @@ Runtime smoke summary:
 5. Run `docker compose run --rm bot alembic upgrade head`.
 6. Restart runtime services after migrations: `docker compose restart bot worker`.
 7. Send `/start`.
-8. Check that Telegram shows the command menu with `/language` and `/cancel`.
-9. Send `/language`, choose Қазақша, then verify `/help` is in Kazakh.
-10. Send `/language`, choose English, then verify `/help` is in English.
-11. Send `/language`, choose Русский, then verify `/help` is in Russian.
-12. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
-13. Set `/timezone` to `Asia/Almaty`.
-14. Create a near-due reminder through `/new`.
-15. Wait for worker delivery.
-16. Check `/list` and verify `next_run_at` advanced.
-17. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
-18. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
-19. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
-20. Verify the deleted reminder disappears from `/list`.
+8. For a fresh Telegram user or reset local database, verify `/start` shows first-run guidance toward `/language`, `/timezone`, `/new` and `/help`.
+9. Check that Telegram shows the command menu with `/language` and `/cancel`.
+10. Send `/language`, choose Қазақша, then verify `/help` is in Kazakh.
+11. Send `/language`, choose English, then verify `/help` is in English.
+12. Send `/language`, choose Русский, then verify `/help` is in Russian.
+13. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
+14. Set `/timezone` to `Asia/Almaty`.
+15. Create a near-due reminder through `/new`.
+16. Wait for worker delivery.
+17. Check `/list` and verify `next_run_at` advanced.
+18. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
+19. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
+20. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
+21. Verify the deleted reminder disappears from `/list`.
 
 Expected:
 
 - bot answers available shell and setup commands;
+- first-time `/start` shows lightweight guidance without forcing a tutorial;
 - Telegram command menu shows current commands including `/language` and `/cancel`;
 - `/language` changes persisted interface language between Russian, Kazakh and English;
 - reminder title/message text is not auto-translated;

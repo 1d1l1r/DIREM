@@ -18,6 +18,7 @@ async def handle_start(message: Message, session: AsyncSession) -> None:
         return
 
     service = UserService(UserRepository(session))
+    existing_user = await service.get_by_telegram_user_id(message.from_user.id)
     user = await service.register_or_update_from_telegram(
         TelegramUserProfile(
             telegram_user_id=message.from_user.id,
@@ -28,7 +29,8 @@ async def handle_start(message: Message, session: AsyncSession) -> None:
         )
     )
 
+    message_key = "start.onboarding" if existing_user is None else "start.text"
     await message.answer(
-        t(user.language_code, "start.text", timezone=user.timezone, language=language_name(user.language_code)),
+        t(user.language_code, message_key, timezone=user.timezone, language=language_name(user.language_code)),
         reply_markup=idle_reply_keyboard(user.language_code),
     )
