@@ -115,7 +115,7 @@ Implemented as persisted user setup:
 - `/start` creates or updates a Telegram user record
 - first-time `/start` shows lightweight guidance toward `/language`, `/timezone`, `/new` and `/help`
 - repeated `/start` preserves the existing timezone
-- `/timezone` stores a validated IANA timezone such as `Asia/Almaty`
+- `/timezone` stores a validated IANA timezone such as `Asia/Almaty`, with common timezone buttons and manual IANA input
 - `/language` stores a selected interface language
 
 Users can now persist an IANA timezone and interface language. Supported interface languages are Russian, Kazakh and English. User-authored reminder titles and message text are not auto-translated.
@@ -169,14 +169,17 @@ Runtime smoke summary:
 11. Send `/language`, choose English, then verify `/help` is in English.
 12. Send `/language`, choose Русский, then verify `/help` is in Russian.
 13. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
-14. Set `/timezone` to `Asia/Almaty`.
-15. Create a near-due reminder through `/new`.
-16. Wait for worker delivery.
-17. Check `/list` and verify `next_run_at` advanced.
-18. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
-19. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
-20. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
-21. Verify the deleted reminder disappears from `/list`.
+14. Send `/timezone`, tap `Asia/Almaty`, then verify it is saved.
+15. Send `/timezone`, tap manual input, send `Europe/London`, then verify it is saved.
+16. Send `/timezone`, send an invalid timezone, then verify the recovery text is clear and `/cancel` exits.
+17. Set `/timezone` back to `Asia/Almaty`.
+18. Create a near-due reminder through `/new`.
+19. Wait for worker delivery.
+20. Check `/list` and verify `next_run_at` advanced.
+21. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
+22. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
+23. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
+24. Verify the deleted reminder disappears from `/list`.
 
 Expected:
 
@@ -184,6 +187,7 @@ Expected:
 - first-time `/start` shows lightweight guidance without forcing a tutorial;
 - Telegram command menu shows current commands including `/language` and `/cancel`;
 - `/language` changes persisted interface language between Russian, Kazakh and English;
+- `/timezone` supports common timezone buttons and manual IANA input;
 - reminder title/message text is not auto-translated;
 - `/cancel` exits active FSM flows and is friendly when nothing is active;
 - `/new` can create a reminder record;
