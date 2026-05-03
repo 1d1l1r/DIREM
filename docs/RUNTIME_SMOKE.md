@@ -1,6 +1,6 @@
 # Runtime Smoke Checklist
 
-This checklist prepares DIREM v0.1.0 for a real Telegram runtime smoke.
+This checklist prepares DIREM v0.2.0 for a real Telegram runtime smoke.
 
 ## Required Automated Checks
 

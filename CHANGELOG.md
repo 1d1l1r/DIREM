@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-03
+
 ### Added
 - Lightweight localized first-run onboarding after `/start`.
 - Expanded `/timezone` picker with Kazakhstan shortcuts, curated region lists and clearer UTC/GMT wording while preserving manual IANA input.
