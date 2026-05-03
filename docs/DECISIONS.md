@@ -775,7 +775,7 @@ MVP должен быть ясным, коротким и функциональ
 
 ## ADR-016 — Design Bunker Mode as user-level delivery suppression
 
-Status: Proposed
+Status: Accepted
 
 ### Context
 
@@ -862,7 +862,7 @@ ADR-012 Accepted — Reject overnight active windows in MVP
 ADR-013 Accepted — Avoid catch-up storms after downtime
 ADR-014 Accepted — Keep MVP single-user friendly but multi-user capable
 ADR-015 Accepted — Keep mascot/ReMemBear out of MVP UI
-ADR-016 Proposed — Design Bunker Mode as user-level delivery suppression
+ADR-016 Accepted — Design Bunker Mode as user-level delivery suppression
 ```
 
 ---

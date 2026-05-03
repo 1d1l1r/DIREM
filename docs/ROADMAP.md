@@ -174,7 +174,7 @@ Not now because it changes the product surface and operational complexity.
 ```text
 v0.1.0 - Core MVP - released
 v0.1.1 - UX polish and small fixes
-v0.2.0 - delivery history, retries, editing
+v0.2.0 - Bunker mode, delivery history, retries, editing
 v0.3.0 - templates / rituals
 v0.4.0 - reflection and response history
 v0.5.0 - project pulse
