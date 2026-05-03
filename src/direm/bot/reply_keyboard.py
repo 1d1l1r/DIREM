@@ -10,10 +10,21 @@ BUNKER_BUTTON_LABELS = tuple(
     for language_code in supported_language_codes()
     for label in (t(language_code, "keyboard.bunker_off"), t(language_code, "keyboard.bunker_on"))
 )
+MAIN_MENU_BUTTON_LABELS = tuple(t(language_code, "keyboard.main_menu") for language_code in supported_language_codes())
 
 
 def idle_reply_keyboard(language_code: str | None = None, *, bunker_active: bool = False) -> ReplyKeyboardMarkup:
     return _single_button_keyboard(t(language_code, "keyboard.bunker_on" if bunker_active else "keyboard.bunker_off"))
+
+
+def action_result_reply_keyboard(language_code: str | None = None, *, bunker_active: bool = False) -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=t(language_code, "keyboard.bunker_on" if bunker_active else "keyboard.bunker_off"))],
+            [KeyboardButton(text=t(language_code, "keyboard.main_menu"))],
+        ],
+        resize_keyboard=True,
+    )
 
 
 def flow_reply_keyboard(language_code: str | None = None) -> ReplyKeyboardMarkup:

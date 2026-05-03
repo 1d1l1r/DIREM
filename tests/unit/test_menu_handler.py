@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import pytest
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from direm.bot.handlers.menu import handle_menu_action, handle_menu_navigation, handle_stale_menu_callback
+from direm.bot.handlers.menu import handle_main_menu_button, handle_menu_action, handle_menu_navigation, handle_stale_menu_callback
 from direm.bot.menu import help_hub_keyboard, list_hub_keyboard, main_menu_keyboard, render_main_menu_text, settings_hub_keyboard
 from direm.db.base import Base
 from direm.repositories.users import UserRepository
@@ -31,7 +31,8 @@ class FakeState:
 
 
 class FakeMessage:
-    def __init__(self) -> None:
+    def __init__(self, *, language_code: str = "en") -> None:
+        self.from_user = SimpleNamespace(id=1001, username="ilya", first_name="Ilya", language_code=language_code)
         self.chat = SimpleNamespace(id=2001)
         self.answers: list[tuple[str, object | None]] = []
 
@@ -147,6 +148,22 @@ async def test_home_callback_returns_main_menu(session_factory) -> None:
     assert "Reminders: 0" in callback.message.answers[0][0]
     assert callback.message.answers[0][1].keyboard[0][0].text == "Bunker OFF"
     assert callback.message.answers[1][1].inline_keyboard[0][0].callback_data == "menu:list"
+
+
+async def test_main_menu_reply_button_returns_home_status(session_factory) -> None:
+    async with session_factory() as session:
+        user = await seed_user(session, language_code="en")
+        user.bunker_active = True
+        await session.commit()
+
+        message = FakeMessage(language_code="en")
+        message.text = "Main menu"
+        await handle_main_menu_button(message, session)
+
+    assert "DIREM is active." in message.answers[0][0]
+    assert "Reminders: 0" in message.answers[0][0]
+    assert message.answers[0][1].keyboard[0][0].text == "Bunker ON"
+    assert message.answers[1][1].inline_keyboard[0][0].callback_data == "menu:list"
 
 
 async def test_action_callback_routes_to_new_flow(session_factory) -> None:

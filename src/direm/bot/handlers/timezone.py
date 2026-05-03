@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from direm.bot.reply_keyboard import flow_reply_keyboard, idle_reply_keyboard
+from direm.bot.reply_keyboard import action_result_reply_keyboard, flow_reply_keyboard
 from direm.bot.states import TimezoneFlow
 from direm.domain.errors import InvalidTimezoneError
 from direm.i18n import t
@@ -77,7 +77,7 @@ async def handle_timezone_callback(callback: CallbackQuery, state: FSMContext, s
     await state.clear()
     await callback.message.answer(
         t(user.language_code, "timezone.updated", timezone=user.timezone),
-        reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
+        reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
     )
     await callback.answer()
 
@@ -108,7 +108,7 @@ async def handle_timezone_input(message: Message, state: FSMContext, session: As
     await state.clear()
     await message.answer(
         t(user.language_code, "timezone.updated", timezone=user.timezone),
-        reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
+        reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
     )
 
 

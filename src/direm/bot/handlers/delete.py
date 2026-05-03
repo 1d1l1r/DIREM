@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from direm.bot.reply_keyboard import flow_reply_keyboard, idle_reply_keyboard
+from direm.bot.reply_keyboard import action_result_reply_keyboard, flow_reply_keyboard, idle_reply_keyboard
 from direm.bot.states import ReminderControlFlow
 from direm.i18n import t
 from direm.repositories.reminders import ReminderRepository
@@ -89,7 +89,10 @@ async def handle_delete_confirmation(message: Message, state: FSMContext, sessio
         return
 
     await state.clear()
-    await message.answer(t(user.language_code, "delete.done", title=reminder.title), reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active))
+    await message.answer(
+        t(user.language_code, "delete.done", title=reminder.title),
+        reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
+    )
 
 
 @router.callback_query(F.data.startswith("control:delete:"))
@@ -142,7 +145,10 @@ async def handle_delete_confirm_callback(callback: CallbackQuery, state: FSMCont
         return
 
     await state.clear()
-    await callback.message.answer(t(user.language_code, "delete.done", title=reminder.title), reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active))
+    await callback.message.answer(
+        t(user.language_code, "delete.done", title=reminder.title),
+        reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
+    )
     await callback.answer()
 
 

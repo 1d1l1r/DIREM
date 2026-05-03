@@ -3,7 +3,7 @@ from typing import Any
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from direm.bot.handlers import credits, delete, language, new, pause_resume, timezone, version
@@ -26,11 +26,22 @@ from direm.bot.menu import (
     main_menu_keyboard,
     settings_hub_keyboard,
 )
+from direm.bot.reply_keyboard import MAIN_MENU_BUTTON_LABELS
 from direm.i18n import t
 from direm.repositories.users import UserRepository
 from direm.services.user_service import TelegramUserProfile, UserService
 
 router = Router(name="menu")
+
+
+@router.message(F.text.in_(MAIN_MENU_BUTTON_LABELS))
+async def handle_main_menu_button(message: Message, session: AsyncSession) -> None:
+    user = await _ensure_user(message, session)
+    if user is None:
+        await message.answer(t("ru", "common.no_profile"))
+        return
+
+    await answer_home_status(message, user, session)
 
 
 @router.callback_query(F.data.in_({MENU_HOME, MENU_LIST, MENU_SETTINGS, MENU_HELP}))
@@ -127,5 +138,21 @@ async def _ensure_user_from_callback(callback: CallbackQuery, session: AsyncSess
             username=callback.from_user.username,
             first_name=callback.from_user.first_name,
             language_code=callback.from_user.language_code,
+        )
+    )
+
+
+async def _ensure_user(message: Message, session: AsyncSession):
+    if message.from_user is None:
+        return None
+
+    service = UserService(UserRepository(session))
+    return await service.register_or_update_from_telegram(
+        TelegramUserProfile(
+            telegram_user_id=message.from_user.id,
+            chat_id=message.chat.id,
+            username=message.from_user.username,
+            first_name=message.from_user.first_name,
+            language_code=message.from_user.language_code,
         )
     )
