@@ -13,6 +13,7 @@ class ReminderStatus(StrEnum):
 
 
 class DeliveryStatus(StrEnum):
+    PENDING = "pending"
     SENT = "sent"
     FAILED = "failed"
     SKIPPED = "skipped"

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from direm.db.models import ReminderCheckIn
-from direm.domain.constants import CheckInResponseType
+from direm.domain.constants import CheckInResponseType, DeliveryStatus
 from direm.repositories.checkins import ReminderCheckInRepository
 
 
@@ -36,7 +36,7 @@ class ReminderCheckInService:
             delivery_id=delivery_id,
             user_id=user_id,
         )
-        if delivery is None:
+        if delivery is None or delivery.status != DeliveryStatus.SENT.value:
             raise CheckInDeliveryNotFoundError("Reminder delivery was not found for this user.")
 
         existing = await self.checkin_repository.get_by_delivery_id_for_user(

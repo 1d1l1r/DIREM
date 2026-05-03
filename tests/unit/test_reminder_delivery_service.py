@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from direm.bot.checkin_buttons import checkin_keyboard
 from direm.db.base import Base
 from direm.db.models import ReminderDelivery
 from direm.domain.constants import DeliveryStatus, ReminderStatus, ScheduleType
@@ -16,14 +17,17 @@ from direm.services.user_service import TelegramUserProfile, UserService
 
 
 class FakeSender:
-    def __init__(self, *, should_fail: bool = False) -> None:
+    def __init__(self, *, should_fail: bool = False, on_send=None) -> None:
         self.should_fail = should_fail
-        self.sent_messages: list[tuple[int, str]] = []
+        self.on_send = on_send
+        self.sent_messages: list[tuple[int, str, object | None]] = []
 
-    async def send_message(self, chat_id: int, text: str) -> object:
+    async def send_message(self, chat_id: int, text: str, reply_markup: object | None = None) -> object:
+        if self.on_send is not None:
+            await self.on_send(reply_markup)
         if self.should_fail:
             raise RuntimeError("telegram unavailable")
-        self.sent_messages.append((chat_id, text))
+        self.sent_messages.append((chat_id, text, reply_markup))
         return object()
 
 
@@ -94,11 +98,49 @@ async def test_delivers_due_active_reminder_and_advances_next_run(session_factor
 
         deliveries = await list_deliveries(session)
         assert delivered == 1
-        assert sender.sent_messages == [(user.chat_id, "Напоминание:\nFocus\n\nReturn to intention.")]
+        assert sender.sent_messages == [(user.chat_id, "Напоминание:\nFocus\n\nReturn to intention.", None)]
         assert deliveries[0].reminder_id == reminder.id
         assert deliveries[0].status == DeliveryStatus.SENT.value
         assert deliveries[0].sent_at == now.replace(tzinfo=None)
         assert reminder.next_run_at == datetime(2026, 4, 27, 12, 30, tzinfo=UTC)
+
+
+async def test_delivery_uses_pending_row_id_for_checkin_buttons_then_marks_sent(session_factory) -> None:
+    async with session_factory() as session:
+        now = datetime(2026, 4, 27, 12, 0, tzinfo=UTC)
+        user = await create_user(session, 1001)
+        user.language_code = "en"
+        reminder = await create_reminder(
+            session,
+            user,
+            title="Focus",
+            status=ReminderStatus.ACTIVE.value,
+            next_run_at=datetime(2026, 4, 27, 11, 0, tzinfo=UTC),
+        )
+
+        async def observe_pending(reply_markup) -> None:
+            deliveries = await list_deliveries(session)
+            assert len(deliveries) == 1
+            assert deliveries[0].status == DeliveryStatus.PENDING.value
+            assert reply_markup.inline_keyboard[0][0].callback_data == f"checkin:{deliveries[0].id}:done"
+            assert reply_markup.inline_keyboard[0][1].callback_data == f"checkin:{deliveries[0].id}:later"
+            assert reply_markup.inline_keyboard[0][2].callback_data == f"checkin:{deliveries[0].id}:skipped"
+
+        sender = FakeSender(on_send=observe_pending)
+
+        delivered = await ReminderDeliveryService(
+            ReminderRepository(session),
+            ReminderDeliveryRepository(session),
+            sender,
+            checkin_markup_factory=checkin_keyboard,
+        ).deliver_due_once(now_utc=now)
+
+        deliveries = await list_deliveries(session)
+        assert delivered == 1
+        assert deliveries[0].reminder_id == reminder.id
+        assert deliveries[0].status == DeliveryStatus.SENT.value
+        assert deliveries[0].sent_at == now.replace(tzinfo=None)
+        assert sender.sent_messages[0][2].inline_keyboard[0][0].callback_data == f"checkin:{deliveries[0].id}:done"
 
 
 async def test_skips_paused_and_deleted_reminders(session_factory) -> None:
@@ -160,6 +202,43 @@ async def test_failed_send_creates_failed_delivery_without_advancing_next_run(se
         assert reminder.next_run_at == due_at
 
 
+async def test_failed_send_marks_pending_failed_without_exposing_delivered_buttons(session_factory) -> None:
+    async with session_factory() as session:
+        now = datetime(2026, 4, 27, 12, 0, tzinfo=UTC)
+        due_at = datetime(2026, 4, 27, 11, 0, tzinfo=UTC)
+        user = await create_user(session, 1001)
+        reminder = await create_reminder(
+            session,
+            user,
+            title="Focus",
+            status=ReminderStatus.ACTIVE.value,
+            next_run_at=due_at,
+        )
+
+        async def observe_pending(reply_markup) -> None:
+            deliveries = await list_deliveries(session)
+            assert len(deliveries) == 1
+            assert deliveries[0].status == DeliveryStatus.PENDING.value
+            assert reply_markup.inline_keyboard[0][0].callback_data == f"checkin:{deliveries[0].id}:done"
+
+        sender = FakeSender(should_fail=True, on_send=observe_pending)
+
+        delivered = await ReminderDeliveryService(
+            ReminderRepository(session),
+            ReminderDeliveryRepository(session),
+            sender,
+            checkin_markup_factory=checkin_keyboard,
+        ).deliver_due_once(now_utc=now)
+
+        deliveries = await list_deliveries(session)
+        assert delivered == 0
+        assert sender.sent_messages == []
+        assert deliveries[0].reminder_id == reminder.id
+        assert deliveries[0].status == DeliveryStatus.FAILED.value
+        assert deliveries[0].error_message == "telegram unavailable"
+        assert reminder.next_run_at == due_at
+
+
 async def test_daily_delivery_uses_user_timezone_for_next_run(session_factory) -> None:
     async with session_factory() as session:
         now = datetime(2026, 4, 27, 4, 30, tzinfo=UTC)
@@ -208,7 +287,7 @@ async def test_delivery_wrapper_uses_user_language(session_factory) -> None:
             sender,
         ).deliver_due_once(now_utc=now)
 
-        assert sender.sent_messages == [(user.chat_id, "Еске салу:\nНиет\n\nReturn to intention.")]
+        assert sender.sent_messages == [(user.chat_id, "Еске салу:\nНиет\n\nReturn to intention.", None)]
 
 
 async def test_suppresses_due_reminder_for_bunker_active_user(session_factory) -> None:

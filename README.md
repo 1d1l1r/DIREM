@@ -8,9 +8,9 @@ DIREM is a Telegram-first system for regular returns to intention.
 
 Current release state: `DIREM v0.2.0 — Bunker and UX polish`.
 
-This repository currently contains the DIREM Core MVP: bot service, worker delivery MVP, PostgreSQL, SQLAlchemy 2, Alembic, version metadata, credits metadata, user registration with lightweight first-run guidance, persisted user timezones and languages, `/new` reminder record creation, `/list` reminder record viewing, `/pause` and `/resume` status updates, `/delete` reminder record deletion, domain constants, database models for users/reminders/deliveries/user states, and tested schedule calculation functions.
+This repository currently contains the DIREM Core MVP: bot service, worker delivery MVP, PostgreSQL, SQLAlchemy 2, Alembic, version metadata, credits metadata, user registration with lightweight first-run guidance, persisted user timezones and languages, `/new` reminder record creation, `/list` reminder record viewing, `/pause` and `/resume` status updates, `/delete` reminder record deletion, response check-in persistence, domain constants, database models for users/reminders/deliveries/check-ins/user states, and tested schedule calculation functions.
 
-Reminder delivery is now implemented as a basic MVP: the worker polls for due active reminders, sends them to the user's persisted Telegram chat, records success or failure, and advances `next_run_at` after successful sends. Retries, delivery history commands, dashboards and webhook mode are intentionally not implemented.
+Reminder delivery is now implemented as a basic MVP: the worker polls for due active reminders, sends them to the user's persisted Telegram chat, records success or failure, shows Done/Later/Skipped check-in buttons on successful delivery, and advances `next_run_at` after successful sends. Retries, delivery history commands, text response capture, snooze, dashboards and webhook mode are intentionally not implemented.
 
 ## Stack
 
@@ -67,9 +67,10 @@ The migrations create the schema foundation:
 - `users`
 - `reminders`
 - `reminder_deliveries`
+- `reminder_checkins`
 - `user_states`
 
-These tables support persisted reminder creation and basic worker delivery records.
+These tables support persisted reminder creation, basic worker delivery records and per-delivery check-in responses.
 
 ## Bot Commands
 
@@ -146,11 +147,12 @@ Implemented worker delivery MVP:
 - paused and deleted reminders are skipped
 - messages are sent to the persisted Telegram `chat_id`
 - successful sends create `reminder_deliveries` records
+- successful sends include Done/Later/Skipped check-in buttons and record responses per delivery
 - failed sends are logged and recorded without crashing the worker
 - successful sends advance `next_run_at` using the user's timezone and domain schedule functions
 - delivery message wrapper text uses the user's selected interface language
 
-Timed Bunker, per-reminder snooze, Bunker history, retries, AI translation, delivery history commands, dashboards, webhook mode and reminder editing are still not implemented.
+Timed Bunker, per-reminder snooze, Bunker history, retries, text response capture, AI translation, delivery history commands, dashboards, webhook mode and reminder editing are still not implemented.
 
 ## Release Readiness
 
@@ -197,11 +199,13 @@ Runtime smoke summary:
 29. Set `/timezone` back to `Asia/Almaty`.
 30. Create a near-due reminder through `/new`.
 31. Wait for worker delivery.
-32. Check `/list` and verify `next_run_at` advanced.
-33. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
-34. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
-35. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
-36. Verify the deleted reminder disappears from `/list`.
+32. Tap Done on the delivered reminder and verify a confirmation.
+33. Tap Later on the same delivered reminder and verify the response updates; Later does not snooze or change the schedule.
+34. Check `/list` and verify `next_run_at` advanced.
+35. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
+36. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
+37. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
+38. Verify the deleted reminder disappears from `/list`.
 
 Expected:
 
@@ -220,6 +224,7 @@ Expected:
 - `/delete` inline confirmation removes reminder records from the current Telegram user's list;
 - `/bunker` remains usable and the Bunker reply button directly toggles suppression for the current Telegram user;
 - worker sends due active reminders with basic MVP delivery behavior;
+- delivered reminders include Done/Later/Skipped check-in buttons, and repeated taps update the current response for that delivery;
 - worker does not implement retries, delivery history commands, dashboards or webhook mode;
 - db container stays healthy;
 - logs do not print the Telegram token.

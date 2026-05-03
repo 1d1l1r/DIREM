@@ -57,13 +57,13 @@ async def create_reminder(session, user, *, next_run_at: datetime):
     return reminder
 
 
-async def create_delivery(session, user, reminder):
+async def create_delivery(session, user, reminder, *, status: str = DeliveryStatus.SENT.value):
     return await ReminderDeliveryRepository(session).create(
         reminder_id=reminder.id,
         user_id=user.id,
         scheduled_for=reminder.next_run_at,
-        status=DeliveryStatus.SENT.value,
-        sent_at=datetime(2026, 5, 3, 9, 0, tzinfo=UTC),
+        status=status,
+        sent_at=datetime(2026, 5, 3, 9, 0, tzinfo=UTC) if status == DeliveryStatus.SENT.value else None,
     )
 
 
@@ -144,6 +144,23 @@ async def test_user_cannot_record_checkin_for_another_users_delivery(session_fac
         with pytest.raises(CheckInDeliveryNotFoundError):
             await ReminderCheckInService(ReminderCheckInRepository(session)).record_response(
                 user_id=other.id,
+                delivery_id=delivery.id,
+                response_type=CheckInResponseType.DONE.value,
+            )
+
+        assert await list_checkins(session) == []
+
+
+@pytest.mark.parametrize("delivery_status", [DeliveryStatus.PENDING.value, DeliveryStatus.FAILED.value])
+async def test_checkin_requires_sent_delivery(session_factory, delivery_status: str) -> None:
+    async with session_factory() as session:
+        user = await create_user(session, 1001)
+        reminder = await create_reminder(session, user, next_run_at=datetime(2026, 5, 3, 8, 30, tzinfo=UTC))
+        delivery = await create_delivery(session, user, reminder, status=delivery_status)
+
+        with pytest.raises(CheckInDeliveryNotFoundError):
+            await ReminderCheckInService(ReminderCheckInRepository(session)).record_response(
+                user_id=user.id,
                 delivery_id=delivery.id,
                 response_type=CheckInResponseType.DONE.value,
             )

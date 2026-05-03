@@ -51,11 +51,14 @@ Owner checklist:
 31. Set `/timezone` back to `Asia/Almaty`.
 32. Create a near-due reminder through `/new`.
 33. Wait for worker delivery.
-34. Check `/list` and verify `next_run_at` advanced.
-35. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
-36. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
-37. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
-38. Verify the deleted reminder disappears from `/list`.
+34. Tap Done on the delivered reminder and verify a confirmation.
+35. Tap Later on the same delivered reminder and verify the response updates, not duplicates; Later must not snooze or mutate `next_run_at`.
+36. Create another delivery if practical, tap Skipped and verify a confirmation.
+37. Check `/list` and verify `next_run_at` advanced from worker delivery.
+38. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
+39. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
+40. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
+41. Verify the deleted reminder disappears from `/list`.
 
 Expected runtime behavior:
 
@@ -79,6 +82,9 @@ Expected runtime behavior:
 - paused reminders are not sent;
 - deleted reminders are not sent;
 - successful sends create `reminder_deliveries` records;
+- successful sends show Done/Later/Skipped check-in buttons;
+- check-in taps record or update one response per delivery;
+- Later is only a recorded response and does not snooze or mutate reminder schedules;
 - failed sends are logged and recorded without crashing the worker;
 - delivery wrapper text uses the user's selected interface language;
 - retries are not implemented;

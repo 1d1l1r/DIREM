@@ -3,6 +3,7 @@ import logging
 
 from sqlalchemy.exc import SQLAlchemyError
 
+from direm.bot.checkin_buttons import checkin_keyboard
 from direm.db.session import async_session_factory
 from direm.repositories.deliveries import ReminderDeliveryRepository
 from direm.repositories.reminders import ReminderRepository
@@ -21,6 +22,7 @@ async def run_worker(sender: TelegramSender, *, poll_seconds: int, batch_size: i
                     ReminderRepository(session),
                     ReminderDeliveryRepository(session),
                     sender,
+                    checkin_markup_factory=checkin_keyboard,
                 )
                 delivered_count = await service.deliver_due_once(limit=batch_size)
                 await session.commit()

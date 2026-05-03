@@ -4,6 +4,7 @@
 
 ### Added
 - Internal `ReminderCheckIn` persistence foundation for future response check-ins.
+- Done/Later/Skipped check-in buttons on successfully delivered reminders.
 
 ## [0.2.0] - 2026-05-03
 
