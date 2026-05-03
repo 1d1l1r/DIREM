@@ -3,7 +3,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from direm.bot.menu import main_menu_keyboard, render_main_menu_text
+from direm.bot.home import answer_home_status
 from direm.bot.reply_keyboard import idle_reply_keyboard
 from direm.i18n import language_name, t
 from direm.repositories.users import UserRepository
@@ -37,7 +37,4 @@ async def handle_start(message: Message, session: AsyncSession) -> None:
         )
         return
 
-    await message.answer(
-        render_main_menu_text(user.language_code, user.timezone, bunker_active=user.bunker_active),
-        reply_markup=main_menu_keyboard(user.language_code, bunker_active=user.bunker_active),
-    )
+    await answer_home_status(message, user, session)

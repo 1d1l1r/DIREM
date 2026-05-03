@@ -22,7 +22,10 @@ async def handle_list(message: Message, session: AsyncSession) -> None:
 
     service = ReminderListService(ReminderRepository(session))
     items = await service.list_for_user(user)
-    await message.answer(service.render_for_user(items, user.language_code), reply_markup=idle_reply_keyboard(user.language_code))
+    await message.answer(
+        service.render_for_user(items, user.language_code),
+        reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
+    )
 
 
 async def _ensure_user(message: Message, session: AsyncSession):

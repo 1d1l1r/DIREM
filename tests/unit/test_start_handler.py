@@ -43,7 +43,7 @@ async def test_start_shows_onboarding_for_new_user(session_factory) -> None:
     assert "/timezone" in answer
     assert "/new" in answer
     assert "/help" in answer
-    assert keyboard.keyboard[0][0].text == "Help"
+    assert keyboard.keyboard[0][0].text == "Bunker OFF"
 
 
 async def test_start_keeps_existing_user_non_intrusive(session_factory) -> None:
@@ -69,16 +69,19 @@ async def test_start_keeps_existing_user_non_intrusive(session_factory) -> None:
         updated = await UserRepository(session).get_by_telegram_user_id(1001)
 
     answer, keyboard = message.answers[0]
+    navigation_text, navigation_keyboard = message.answers[1]
     assert "Жылдам бастау:" not in answer
     assert "DIREM іске қосылды." in answer
     assert "Asia/Almaty" in answer
+    assert "Еске салулар: 0" in answer
     assert updated is not None
     assert updated.timezone == "Asia/Almaty"
     assert updated.language_code == "kk"
-    assert keyboard.inline_keyboard[0][0].callback_data == "menu:list"
-    assert keyboard.inline_keyboard[0][1].callback_data == "menu:settings"
-    assert keyboard.inline_keyboard[0][2].callback_data == "menu:help"
-    assert keyboard.inline_keyboard[1][0].callback_data == "menu:bunker"
+    assert keyboard.keyboard[0][0].text == "Бункер OFF"
+    assert navigation_text == "Навигация:"
+    assert navigation_keyboard.inline_keyboard[0][0].callback_data == "menu:list"
+    assert navigation_keyboard.inline_keyboard[0][1].callback_data == "menu:settings"
+    assert navigation_keyboard.inline_keyboard[0][2].callback_data == "menu:help"
 
 
 @pytest.mark.parametrize(

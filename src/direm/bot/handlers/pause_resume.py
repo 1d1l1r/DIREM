@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from direm.bot.reply_keyboard import flow_reply_keyboard, idle_reply_keyboard
+from direm.bot.reply_keyboard import action_result_reply_keyboard, flow_reply_keyboard, idle_reply_keyboard
 from direm.bot.states import ReminderControlFlow
 from direm.domain.constants import ReminderStatus
 from direm.domain.errors import InvalidScheduleConfigError
@@ -68,7 +68,10 @@ async def handle_pause_selection(message: Message, state: FSMContext, session: A
         return
 
     await state.clear()
-    await message.answer(t(user.language_code, "pause.done", title=reminder.title), reply_markup=idle_reply_keyboard(user.language_code))
+    await message.answer(
+        t(user.language_code, "pause.done", title=reminder.title),
+        reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
+    )
 
 
 @router.message(ReminderControlFlow.waiting_resume_selection)
@@ -86,11 +89,14 @@ async def handle_resume_selection(message: Message, state: FSMContext, session: 
         return
     except InvalidScheduleConfigError:
         await state.clear()
-        await message.answer(t(user.language_code, "resume.invalid_schedule"), reply_markup=idle_reply_keyboard(user.language_code))
+        await message.answer(t(user.language_code, "resume.invalid_schedule"), reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active))
         return
 
     await state.clear()
-    await message.answer(t(user.language_code, "resume.done", title=reminder.title), reply_markup=idle_reply_keyboard(user.language_code))
+    await message.answer(
+        t(user.language_code, "resume.done", title=reminder.title),
+        reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
+    )
 
 
 @router.callback_query(F.data.startswith("control:pause:"))
@@ -113,7 +119,10 @@ async def handle_pause_callback(callback: CallbackQuery, state: FSMContext, sess
         return
 
     await state.clear()
-    await callback.message.answer(t(user.language_code, "pause.done", title=reminder.title), reply_markup=idle_reply_keyboard(user.language_code))
+    await callback.message.answer(
+        t(user.language_code, "pause.done", title=reminder.title),
+        reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
+    )
     await callback.answer()
 
 
@@ -137,12 +146,15 @@ async def handle_resume_callback(callback: CallbackQuery, state: FSMContext, ses
         return
     except InvalidScheduleConfigError:
         await state.clear()
-        await callback.message.answer(t(user.language_code, "resume.invalid_schedule"), reply_markup=idle_reply_keyboard(user.language_code))
+        await callback.message.answer(t(user.language_code, "resume.invalid_schedule"), reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active))
         await callback.answer()
         return
 
     await state.clear()
-    await callback.message.answer(t(user.language_code, "resume.done", title=reminder.title), reply_markup=idle_reply_keyboard(user.language_code))
+    await callback.message.answer(
+        t(user.language_code, "resume.done", title=reminder.title),
+        reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
+    )
     await callback.answer()
 
 

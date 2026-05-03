@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from direm.bot.reply_keyboard import idle_reply_keyboard
+from direm.bot.reply_keyboard import action_result_reply_keyboard
 from direm.repositories.users import UserRepository
 from direm.services.credits_service import render_credits
 from direm.services.user_service import TelegramUserProfile, UserService
@@ -15,7 +15,10 @@ router = Router(name="credits")
 async def handle_credits(message: Message, session: AsyncSession) -> None:
     user = await _ensure_user(message, session)
     language_code = user.language_code if user else "ru"
-    await message.answer(render_credits(language_code), reply_markup=idle_reply_keyboard(language_code))
+    await message.answer(
+        render_credits(language_code),
+        reply_markup=action_result_reply_keyboard(language_code, bunker_active=user.bunker_active if user else False),
+    )
 
 
 async def _ensure_user(message: Message, session: AsyncSession):

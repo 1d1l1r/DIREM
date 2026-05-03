@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from direm.bot.reply_keyboard import idle_reply_keyboard
+from direm.bot.reply_keyboard import action_result_reply_keyboard
 from direm.i18n import language_name, supported_language_codes, t
 from direm.repositories.users import UserRepository
 from direm.services.user_service import TelegramUserProfile, UserService
@@ -40,7 +40,7 @@ async def handle_language_callback(callback: CallbackQuery, session: AsyncSessio
     user = await service.update_language(user, language_code)
     await callback.message.answer(
         t(user.language_code, "language.updated", language=language_name(user.language_code)),
-        reply_markup=idle_reply_keyboard(user.language_code),
+        reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
     )
     await callback.answer()
 

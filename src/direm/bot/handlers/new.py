@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from direm.bot.reply_keyboard import flow_reply_keyboard, idle_reply_keyboard
+from direm.bot.reply_keyboard import action_result_reply_keyboard, flow_reply_keyboard, idle_reply_keyboard
 from direm.bot.states import CreateReminderFlow
 from direm.domain.constants import ScheduleType
 from direm.domain.errors import InvalidActiveWindowError, InvalidScheduleConfigError
@@ -160,14 +160,14 @@ async def confirm_create(callback: CallbackQuery, state: FSMContext, session: As
         created = await service.create_reminder(user, request)
     except InvalidScheduleConfigError:
         await state.clear()
-        await callback.message.answer(t(user.language_code, "new.invalid_config"), reply_markup=idle_reply_keyboard(user.language_code))
+        await callback.message.answer(t(user.language_code, "new.invalid_config"), reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active))
         await callback.answer()
         return
 
     await state.clear()
     await callback.message.answer(
         t(user.language_code, "new.created", first_run=_format_local_datetime(created.first_run_at_utc, user.timezone)),
-        reply_markup=idle_reply_keyboard(user.language_code),
+        reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
     )
     await callback.answer()
 
