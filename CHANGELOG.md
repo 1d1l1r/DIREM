@@ -4,6 +4,7 @@
 
 ### Added
 - Lightweight localized first-run onboarding after `/start`.
+- Lightweight `/timezone` picker with common timezone buttons while preserving manual IANA input.
 
 ## [0.1.0] - 2026-04-29
 

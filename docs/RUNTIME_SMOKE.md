@@ -31,20 +31,24 @@ Owner checklist:
 11. Send `/language`, choose English, then verify `/help` is in English.
 12. Send `/language`, choose Русский, then verify `/help` is in Russian.
 13. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
-14. Set `/timezone` to `Asia/Almaty`.
-15. Create a near-due reminder through `/new`.
-16. Wait for worker delivery.
-17. Check `/list` and verify `next_run_at` advanced.
-18. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
-19. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
-20. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
-21. Verify the deleted reminder disappears from `/list`.
+14. Send `/timezone`, tap `Asia/Almaty`, then verify it is saved.
+15. Send `/timezone`, tap manual input, send `Europe/London`, then verify it is saved.
+16. Send `/timezone`, send an invalid timezone, then verify the recovery text is clear and `/cancel` exits.
+17. Set `/timezone` back to `Asia/Almaty`.
+18. Create a near-due reminder through `/new`.
+19. Wait for worker delivery.
+20. Check `/list` and verify `next_run_at` advanced.
+21. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
+22. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
+23. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
+24. Verify the deleted reminder disappears from `/list`.
 
 Expected runtime behavior:
 
 - Telegram command menu shows current commands including `/language` and `/cancel`;
 - first-time `/start` shows lightweight guidance without forcing a tutorial;
 - `/language` persists Russian, Kazakh and English interface choices;
+- `/timezone` supports common timezone buttons and manual IANA input;
 - `/help` is grouped by purpose and does not show internal worker/retry/dashboard/webhook notes;
 - idle state shows a localized Help reply button;
 - active FSM flows show a localized Cancel reply button;
