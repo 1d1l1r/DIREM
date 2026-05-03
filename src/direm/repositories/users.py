@@ -1,6 +1,9 @@
+from datetime import datetime
+
+from sqlalchemy import select
+
 from direm.db.models import User
 from direm.repositories.base import Repository
-from sqlalchemy import select
 
 
 class UserRepository(Repository[User]):
@@ -55,5 +58,20 @@ class UserRepository(Repository[User]):
 
     async def update_language(self, user: User, language_code: str) -> User:
         user.language_code = language_code
+        await self.session.flush()
+        return user
+
+    async def get_bunker_state(self, user: User) -> tuple[bool, datetime | None]:
+        return user.bunker_active, user.bunker_activated_at
+
+    async def activate_bunker(self, user: User, *, activated_at: datetime) -> User:
+        user.bunker_active = True
+        user.bunker_activated_at = activated_at
+        await self.session.flush()
+        return user
+
+    async def deactivate_bunker(self, user: User) -> User:
+        user.bunker_active = False
+        user.bunker_activated_at = None
         await self.session.flush()
         return user
