@@ -67,6 +67,7 @@ Candidate tickets:
 3. Russian/Kazakh/English copy polish after real usage.
 4. Empty state and confirmation copy polish.
 5. Runtime smoke documentation refinements from owner testing.
+6. Bunker Mode design.
 
 Scope lock:
 
@@ -90,11 +91,12 @@ Add the first post-MVP functional capabilities while keeping the Telegram-only p
 
 Candidate tickets:
 
-1. Delivery history command.
-2. Retry policy MVP.
-3. Reminder editing.
-4. Reminder details view.
-5. Safer worker observability and owner-readable diagnostics.
+1. Bunker Mode implementation.
+2. Delivery history command.
+3. Retry policy MVP.
+4. Reminder editing.
+5. Reminder details view.
+6. Safer worker observability and owner-readable diagnostics.
 
 Scope lock:
 
@@ -123,6 +125,16 @@ Possible later direction:
 - Delivery history view.
 
 Not now because Telegram-only usage should prove its limits first.
+
+### Bunker Mode Extensions
+
+Possible later direction:
+
+- timed Bunker until a selected date/time;
+- Bunker status display in reminder lists;
+- owner diagnostics for suppressed reminders.
+
+Not in the first Bunker implementation because the initial design keeps Bunker as simple user-level delivery suppression.
 
 ### Webhook Mode
 
