@@ -3,6 +3,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from direm.bot.menu import main_menu_keyboard, render_main_menu_text
 from direm.bot.reply_keyboard import idle_reply_keyboard
 from direm.i18n import language_name, t
 from direm.repositories.users import UserRepository
@@ -29,8 +30,14 @@ async def handle_start(message: Message, session: AsyncSession) -> None:
         )
     )
 
-    message_key = "start.onboarding" if existing_user is None else "start.text"
+    if existing_user is None:
+        await message.answer(
+            t(user.language_code, "start.onboarding", timezone=user.timezone, language=language_name(user.language_code)),
+            reply_markup=idle_reply_keyboard(user.language_code),
+        )
+        return
+
     await message.answer(
-        t(user.language_code, message_key, timezone=user.timezone, language=language_name(user.language_code)),
-        reply_markup=idle_reply_keyboard(user.language_code),
+        render_main_menu_text(user.language_code, user.timezone),
+        reply_markup=main_menu_keyboard(user.language_code),
     )

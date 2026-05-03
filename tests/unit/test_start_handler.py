@@ -75,7 +75,9 @@ async def test_start_keeps_existing_user_non_intrusive(session_factory) -> None:
     assert updated is not None
     assert updated.timezone == "Asia/Almaty"
     assert updated.language_code == "kk"
-    assert keyboard.keyboard[0][0].text == "Көмек"
+    assert keyboard.inline_keyboard[0][0].callback_data == "menu:list"
+    assert keyboard.inline_keyboard[0][1].callback_data == "menu:settings"
+    assert keyboard.inline_keyboard[0][2].callback_data == "menu:help"
 
 
 @pytest.mark.parametrize(

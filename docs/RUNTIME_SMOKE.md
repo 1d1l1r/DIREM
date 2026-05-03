@@ -30,23 +30,30 @@ Owner checklist:
 10. Send `/language`, choose Қазақша, then verify `/help` is in Kazakh.
 11. Send `/language`, choose English, then verify `/help` is in English.
 12. Send `/language`, choose Русский, then verify `/help` is in Russian.
-13. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
-14. Send `/timezone`, tap `Asia/Almaty`, then verify it is saved.
-15. Send `/timezone`, tap manual input, send `Europe/London`, then verify it is saved.
-16. Send `/timezone`, send an invalid timezone, then verify the recovery text is clear and `/cancel` exits.
-17. Set `/timezone` back to `Asia/Almaty`.
-18. Create a near-due reminder through `/new`.
-19. Wait for worker delivery.
-20. Check `/list` and verify `next_run_at` advanced.
-21. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
-22. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
-23. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
-24. Verify the deleted reminder disappears from `/list`.
+13. Send `/start` as an existing user, verify the localized main menu appears.
+14. Tap List, then Back/Home.
+15. Tap Settings, then Language, then `/cancel`.
+16. Send `/start`, tap Settings, then Timezone, then `/cancel`.
+17. Send `/start`, tap Help, then DIREM version.
+18. Send `/start`, tap Help, then Credits.
+19. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
+20. Send `/timezone`, tap `Asia/Almaty`, then verify it is saved.
+21. Send `/timezone`, tap manual input, send `Europe/London`, then verify it is saved.
+22. Send `/timezone`, send an invalid timezone, then verify the recovery text is clear and `/cancel` exits.
+23. Set `/timezone` back to `Asia/Almaty`.
+24. Create a near-due reminder through `/new`.
+25. Wait for worker delivery.
+26. Check `/list` and verify `next_run_at` advanced.
+27. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
+28. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
+29. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
+30. Verify the deleted reminder disappears from `/list`.
 
 Expected runtime behavior:
 
 - Telegram command menu shows current commands including `/language` and `/cancel`;
 - first-time `/start` shows lightweight guidance without forcing a tutorial;
+- existing-user `/start` shows a localized main menu with List, Settings and Help hubs;
 - `/language` persists Russian, Kazakh and English interface choices;
 - `/timezone` supports common timezone buttons and manual IANA input;
 - `/help` is grouped by purpose and does not show internal worker/retry/dashboard/webhook notes;
