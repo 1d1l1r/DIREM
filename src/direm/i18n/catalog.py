@@ -214,7 +214,7 @@ CATALOG: dict[str, dict[str, str]] = {
         "timezone.invalid": "Invalid timezone.\nTry another IANA timezone name, for example Asia/Almaty, Europe/London or UTC. You can open the picker again with /timezone, or cancel with the Cancel button or /cancel.",
         "timezone.callback_invalid": "Could not use that timezone choice. Open /timezone again.",
         "timezone.updated": "Timezone updated: {timezone}",
-        "new.title_prompt": "Create reminder.\n\nSend a short title.\nExample: Dorpheus focus",
+        "new.title_prompt": "Create reminder.\n\nSend a short title.\nExample: Morning focus",
         "new.title_invalid": "Title is required. Keep it short, up to 80 characters.",
         "new.message_prompt": "Send the reminder message text.",
         "new.message_invalid": "Message text is required. Keep it up to 1000 characters.",
