@@ -14,17 +14,17 @@ router = Router(name="help")
 @router.message(Command("help"))
 async def handle_help(message: Message, session: AsyncSession) -> None:
     user = await _ensure_user(message, session)
-    await _answer_help(message, user.language_code if user else "ru")
+    await _answer_help(message, user.language_code if user else "ru", user.bunker_active if user else False)
 
 
 @router.message(F.text.in_(HELP_BUTTON_LABELS))
 async def handle_help_button(message: Message, session: AsyncSession) -> None:
     user = await _ensure_user(message, session)
-    await _answer_help(message, user.language_code if user else "ru")
+    await _answer_help(message, user.language_code if user else "ru", user.bunker_active if user else False)
 
 
-async def _answer_help(message: Message, language_code: str | None) -> None:
-    await message.answer(t(language_code, "help.text"), reply_markup=idle_reply_keyboard(language_code))
+async def _answer_help(message: Message, language_code: str | None, bunker_active: bool = False) -> None:
+    await message.answer(t(language_code, "help.text"), reply_markup=idle_reply_keyboard(language_code, bunker_active=bunker_active))
 
 
 async def _ensure_user(message: Message, session: AsyncSession):

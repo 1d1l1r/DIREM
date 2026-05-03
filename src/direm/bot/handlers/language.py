@@ -40,7 +40,7 @@ async def handle_language_callback(callback: CallbackQuery, session: AsyncSessio
     user = await service.update_language(user, language_code)
     await callback.message.answer(
         t(user.language_code, "language.updated", language=language_name(user.language_code)),
-        reply_markup=idle_reply_keyboard(user.language_code),
+        reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
     )
     await callback.answer()
 

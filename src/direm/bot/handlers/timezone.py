@@ -77,7 +77,7 @@ async def handle_timezone_callback(callback: CallbackQuery, state: FSMContext, s
     await state.clear()
     await callback.message.answer(
         t(user.language_code, "timezone.updated", timezone=user.timezone),
-        reply_markup=idle_reply_keyboard(user.language_code),
+        reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
     )
     await callback.answer()
 
@@ -106,7 +106,10 @@ async def handle_timezone_input(message: Message, state: FSMContext, session: As
         return
 
     await state.clear()
-    await message.answer(t(user.language_code, "timezone.updated", timezone=user.timezone), reply_markup=idle_reply_keyboard(user.language_code))
+    await message.answer(
+        t(user.language_code, "timezone.updated", timezone=user.timezone),
+        reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
+    )
 
 
 def _timezone_keyboard(language_code: str | None = None) -> InlineKeyboardMarkup:

@@ -5,7 +5,13 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from direm.bot.handlers.bunker import handle_bunker_activate, handle_bunker_command, handle_bunker_deactivate, handle_stale_bunker_callback
+from direm.bot.handlers.bunker import (
+    handle_bunker_activate,
+    handle_bunker_command,
+    handle_bunker_deactivate,
+    handle_bunker_reply_toggle,
+    handle_stale_bunker_callback,
+)
 from direm.db.base import Base
 from direm.db.models import Reminder, ReminderDelivery
 from direm.domain.constants import ReminderStatus, ScheduleType
@@ -67,6 +73,7 @@ async def test_bunker_command_renders_inactive_state(session_factory) -> None:
 
     assert "Bunker is off." in message.answers[0][0]
     assert message.answers[0][1].inline_keyboard[0][0].callback_data == "bunker:activate"
+    assert message.answers[1][1].keyboard[0][0].text == "Bunker OFF"
 
 
 async def test_bunker_command_renders_active_state(session_factory) -> None:
@@ -79,6 +86,7 @@ async def test_bunker_command_renders_active_state(session_factory) -> None:
 
     assert "Bunker is active." in message.answers[0][0]
     assert message.answers[0][1].inline_keyboard[0][0].callback_data == "bunker:deactivate"
+    assert message.answers[1][1].keyboard[0][0].text == "Bunker ON"
 
 
 async def test_bunker_activate_callback_sets_state_without_rescheduling(session_factory) -> None:
@@ -133,6 +141,8 @@ async def test_bunker_deactivate_callback_reschedules_without_delivery_records(s
         assert reminder.next_run_at > due_at
         assert deliveries == []
         assert "Bunker turned off." in callback.message.answers[0][0]
+        assert "DIREM is active." in callback.message.answers[1][0]
+        assert callback.message.answers[1][1].keyboard[0][0].text == "Bunker OFF"
 
 
 async def test_stale_bunker_callback_does_not_crash(session_factory) -> None:
@@ -143,3 +153,47 @@ async def test_stale_bunker_callback_does_not_crash(session_factory) -> None:
         await handle_stale_bunker_callback(callback, session)
 
     assert callback.answers == [("This Bunker action is stale. Open /bunker again.", True)]
+
+
+async def test_bunker_reply_button_activates_directly(session_factory) -> None:
+    async with session_factory() as session:
+        user = await seed_user(session)
+        message = FakeMessage(language_code="en")
+        message.text = "Bunker OFF"
+
+        await handle_bunker_reply_toggle(message, session)
+
+        assert user.bunker_active is True
+        assert "Bunker activated." in message.answers[0][0]
+        assert "DIREM is active." in message.answers[1][0]
+        assert message.answers[1][1].keyboard[0][0].text == "Bunker ON"
+
+
+async def test_bunker_reply_button_deactivates_and_reschedules_directly(session_factory) -> None:
+    due_at = datetime.now(UTC)
+    async with session_factory() as session:
+        user = await seed_user(session)
+        reminder = Reminder(
+            user_id=user.id,
+            title="Morning focus",
+            message_text="Return.",
+            schedule_type=ScheduleType.INTERVAL.value,
+            interval_minutes=30,
+            timezone=user.timezone,
+            status=ReminderStatus.ACTIVE.value,
+            next_run_at=due_at,
+        )
+        session.add(reminder)
+        await session.flush()
+        await BunkerService(UserRepository(session)).activate(user)
+        message = FakeMessage(language_code="en")
+        message.text = "Bunker ON"
+
+        await handle_bunker_reply_toggle(message, session)
+
+        deliveries = (await session.execute(select(ReminderDelivery))).scalars().all()
+        assert user.bunker_active is False
+        assert reminder.next_run_at > due_at
+        assert deliveries == []
+        assert "Bunker turned off." in message.answers[0][0]
+        assert message.answers[1][1].keyboard[0][0].text == "Bunker OFF"

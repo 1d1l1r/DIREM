@@ -6,12 +6,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from direm.bot.handlers import bunker, credits, delete, language, new, pause_resume, timezone, version
+from direm.bot.handlers import credits, delete, language, new, pause_resume, timezone, version
+from direm.bot.home import answer_home_status
 from direm.bot.menu import (
     MENU_ADD,
     MENU_CREDITS,
     MENU_DELETE,
-    MENU_BUNKER,
     MENU_HELP,
     MENU_HOME,
     MENU_LANGUAGE,
@@ -24,7 +24,6 @@ from direm.bot.menu import (
     help_hub_keyboard,
     list_hub_keyboard,
     main_menu_keyboard,
-    render_main_menu_text,
     settings_hub_keyboard,
 )
 from direm.i18n import t
@@ -34,7 +33,7 @@ from direm.services.user_service import TelegramUserProfile, UserService
 router = Router(name="menu")
 
 
-@router.callback_query(F.data.in_({MENU_HOME, MENU_LIST, MENU_SETTINGS, MENU_HELP, MENU_BUNKER}))
+@router.callback_query(F.data.in_({MENU_HOME, MENU_LIST, MENU_SETTINGS, MENU_HELP}))
 async def handle_menu_navigation(callback: CallbackQuery, session: AsyncSession) -> None:
     user = await _ensure_user_from_callback(callback, session)
     if user is None:
@@ -42,10 +41,7 @@ async def handle_menu_navigation(callback: CallbackQuery, session: AsyncSession)
         return
 
     if callback.data == MENU_HOME:
-        await callback.message.answer(
-            render_main_menu_text(user.language_code, user.timezone, bunker_active=user.bunker_active),
-            reply_markup=main_menu_keyboard(user.language_code, bunker_active=user.bunker_active),
-        )
+        await answer_home_status(callback.message, user, session)
     elif callback.data == MENU_LIST:
         await callback.message.answer(t(user.language_code, "menu.list_hub"), reply_markup=list_hub_keyboard(user.language_code))
     elif callback.data == MENU_SETTINGS:
@@ -55,8 +51,6 @@ async def handle_menu_navigation(callback: CallbackQuery, session: AsyncSession)
             t(user.language_code, "menu.help_hub", help_text=t(user.language_code, "help.text")),
             reply_markup=help_hub_keyboard(user.language_code),
         )
-    elif callback.data == MENU_BUNKER:
-        await bunker.answer_bunker_screen(callback.message, user)
 
     await callback.answer()
 

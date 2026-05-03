@@ -4,7 +4,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from direm.bot.reply_keyboard import CANCEL_BUTTON_LABELS, idle_reply_keyboard
+from direm.bot.home import answer_home_status
+from direm.bot.reply_keyboard import CANCEL_BUTTON_LABELS
 from direm.i18n import t
 from direm.repositories.users import UserRepository
 from direm.services.user_service import TelegramUserProfile, UserService
@@ -27,11 +28,15 @@ async def _cancel(message: Message, state: FSMContext, session: AsyncSession) ->
     language_code = user.language_code if user else "ru"
     current_state = await state.get_state()
     if current_state is None:
-        await message.answer(t(language_code, "cancel.none"), reply_markup=idle_reply_keyboard(language_code))
+        await message.answer(t(language_code, "cancel.none"))
+        if user is not None:
+            await answer_home_status(message, user, session)
         return
 
     await state.clear()
-    await message.answer(t(language_code, "cancel.done"), reply_markup=idle_reply_keyboard(language_code))
+    await message.answer(t(language_code, "cancel.done"))
+    if user is not None:
+        await answer_home_status(message, user, session)
 
 
 async def _ensure_user(message: Message, session: AsyncSession):

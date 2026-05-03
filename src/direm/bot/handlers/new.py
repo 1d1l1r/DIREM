@@ -160,14 +160,14 @@ async def confirm_create(callback: CallbackQuery, state: FSMContext, session: As
         created = await service.create_reminder(user, request)
     except InvalidScheduleConfigError:
         await state.clear()
-        await callback.message.answer(t(user.language_code, "new.invalid_config"), reply_markup=idle_reply_keyboard(user.language_code))
+        await callback.message.answer(t(user.language_code, "new.invalid_config"), reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active))
         await callback.answer()
         return
 
     await state.clear()
     await callback.message.answer(
         t(user.language_code, "new.created", first_run=_format_local_datetime(created.first_run_at_utc, user.timezone)),
-        reply_markup=idle_reply_keyboard(user.language_code),
+        reply_markup=idle_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
     )
     await callback.answer()
 

@@ -10,6 +10,7 @@
 - Worker-side suppression for reminders owned by users with active Bunker state.
 - Telegram Bunker Mode UX for temporarily suppressing reminder delivery.
 - Bunker deactivation rescheduling to avoid catch-up reminder storms.
+- Home status reminder stats and direct Bunker ON/OFF reply-keyboard toggle.
 
 ### Changed
 - Removed stale `Dorpheus` references from DIREM examples and tests.

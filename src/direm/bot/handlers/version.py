@@ -17,7 +17,10 @@ async def handle_version(message: Message, session: AsyncSession) -> None:
     user = await _ensure_user(message, session)
     language_code = user.language_code if user else "ru"
     metadata = build_version_metadata(get_settings())
-    await message.answer(render_version(metadata, language_code), reply_markup=idle_reply_keyboard(language_code))
+    await message.answer(
+        render_version(metadata, language_code),
+        reply_markup=idle_reply_keyboard(language_code, bunker_active=user.bunker_active if user else False),
+    )
 
 
 async def _ensure_user(message: Message, session: AsyncSession):

@@ -80,8 +80,7 @@ def test_main_menu_keyboard_is_localized() -> None:
 
     assert [button.text for button in keyboard.inline_keyboard[0]] == ["List", "Settings", "Help"]
     assert [button.callback_data for button in keyboard.inline_keyboard[0]] == ["menu:list", "menu:settings", "menu:help"]
-    assert keyboard.inline_keyboard[1][0].text == "Bunker off"
-    assert keyboard.inline_keyboard[1][0].callback_data == "menu:bunker"
+    assert len(keyboard.inline_keyboard) == 1
 
 
 def test_hub_keyboards_have_expected_actions() -> None:
@@ -110,6 +109,7 @@ def test_main_menu_text_contains_timezone_and_language(language_code: str) -> No
 
     assert "Asia/Almaty" in text
     assert "DIREM" in text
+    assert "Reminders: 0" in text or "Напоминаний: 0" in text or "Еске салулар: 0" in text
 
 
 async def test_navigation_callbacks_render_hubs(session_factory) -> None:
@@ -144,7 +144,9 @@ async def test_home_callback_returns_main_menu(session_factory) -> None:
 
     assert "DIREM is active." in callback.message.answers[0][0]
     assert "Asia/Almaty" in callback.message.answers[0][0]
-    assert callback.message.answers[0][1].inline_keyboard[0][0].callback_data == "menu:list"
+    assert "Reminders: 0" in callback.message.answers[0][0]
+    assert callback.message.answers[0][1].keyboard[0][0].text == "Bunker OFF"
+    assert callback.message.answers[1][1].inline_keyboard[0][0].callback_data == "menu:list"
 
 
 async def test_action_callback_routes_to_new_flow(session_factory) -> None:
@@ -170,19 +172,6 @@ async def test_action_callback_routes_to_version(session_factory) -> None:
         await handle_menu_action(callback, FakeState(), session)
 
     assert "DIREM v0.1.0" in callback.message.answers[0][0]
-
-
-async def test_navigation_callback_routes_to_bunker_screen(session_factory) -> None:
-    async with session_factory() as session:
-        user = await seed_user(session, language_code="en")
-        user.bunker_active = True
-        await session.commit()
-        callback = FakeCallback("menu:bunker", language_code="en")
-
-        await handle_menu_navigation(callback, session)
-
-    assert "Bunker is active." in callback.message.answers[0][0]
-    assert callback.message.answers[0][1].inline_keyboard[0][0].callback_data == "bunker:deactivate"
 
 
 async def test_stale_menu_callback_does_not_crash(session_factory) -> None:

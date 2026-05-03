@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, time
 
-from sqlalchemy import case, select
+from sqlalchemy import case, func, select
 from sqlalchemy.orm import selectinload
 
 from direm.db.models import Reminder, User
@@ -66,6 +66,14 @@ class ReminderRepository(Repository[Reminder]):
             .order_by(Reminder.id.asc())
         )
         return list(result.scalars().all())
+
+    async def count_by_status_for_user(self, user_id: int) -> dict[str, int]:
+        result = await self.session.execute(
+            select(Reminder.status, func.count(Reminder.id))
+            .where(Reminder.user_id == user_id, Reminder.deleted_at.is_(None))
+            .group_by(Reminder.status)
+        )
+        return {status: count for status, count in result.all()}
 
     async def list_due(self, *, now_utc: datetime, limit: int) -> list[Reminder]:
         result = await self.session.execute(
