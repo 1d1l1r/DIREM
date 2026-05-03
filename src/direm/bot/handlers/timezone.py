@@ -99,6 +99,10 @@ async def handle_timezone_input(message: Message, state: FSMContext, session: As
             t(user.language_code, "timezone.invalid"),
             reply_markup=flow_reply_keyboard(user.language_code),
         )
+        await message.answer(
+            t(user.language_code, "timezone.picker_prompt"),
+            reply_markup=_timezone_keyboard(user.language_code),
+        )
         return
 
     await state.clear()
@@ -107,11 +111,17 @@ async def handle_timezone_input(message: Message, state: FSMContext, session: As
 
 def _timezone_keyboard(language_code: str | None = None) -> InlineKeyboardMarkup:
     rows = [
-        [InlineKeyboardButton(text=timezone, callback_data=f"timezone:set:{timezone}")]
+        [InlineKeyboardButton(text=_timezone_button_text(timezone, language_code), callback_data=f"timezone:set:{timezone}")]
         for timezone in COMMON_TIMEZONES
     ]
     rows.append([InlineKeyboardButton(text=t(language_code, "timezone.manual_button"), callback_data="timezone:manual")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _timezone_button_text(timezone: str, language_code: str | None = None) -> str:
+    if timezone == "UTC":
+        return t(language_code, "timezone.utc_label")
+    return timezone
 
 
 async def _ensure_user(message: Message, session: AsyncSession):

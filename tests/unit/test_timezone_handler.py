@@ -65,6 +65,7 @@ def test_timezone_keyboard_contains_common_choices_and_manual() -> None:
 
     callback_data = [row[0].callback_data for row in keyboard.inline_keyboard]
     assert callback_data == [*(f"timezone:set:{timezone}" for timezone in COMMON_TIMEZONES), "timezone:manual"]
+    assert keyboard.inline_keyboard[-2][0].text == "UTC (GMT+0)"
     assert keyboard.inline_keyboard[-1][0].text == "Enter manually"
 
 
@@ -151,8 +152,11 @@ async def test_timezone_invalid_input_returns_recovery_text(session_factory) -> 
 
     assert state.cleared is False
     assert "Invalid timezone." in message.answers[0][0]
-    assert "start again with /timezone" in message.answers[0][0]
+    assert "open the picker again with /timezone" in message.answers[0][0]
+    assert "Cancel button or /cancel" in message.answers[0][0]
     assert message.answers[0][1].keyboard[0][0].text == "Cancel"
+    assert message.answers[1][0] == "Common choices:"
+    assert message.answers[1][1].inline_keyboard[-2][0].text == "UTC (GMT+0)"
 
 
 async def test_timezone_invalid_callback_does_not_crash(session_factory) -> None:
