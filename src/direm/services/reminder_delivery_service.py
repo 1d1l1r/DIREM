@@ -41,6 +41,10 @@ class ReminderDeliveryService:
         return delivered_count
 
     async def _deliver_one(self, reminder: Reminder, now_utc: datetime) -> bool:
+        if reminder.user.bunker_active:
+            logger.info("Suppressing reminder id=%s for Bunker-active user id=%s", reminder.id, reminder.user_id)
+            return False
+
         scheduled_for = reminder.next_run_at or now_utc
         try:
             await self.sender.send_message(chat_id=reminder.user.chat_id, text=self._render_message(reminder))

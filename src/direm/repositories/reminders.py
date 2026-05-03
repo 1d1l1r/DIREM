@@ -3,7 +3,7 @@ from datetime import UTC, datetime, time
 from sqlalchemy import case, select
 from sqlalchemy.orm import selectinload
 
-from direm.db.models import Reminder
+from direm.db.models import Reminder, User
 from direm.domain.constants import ReminderStatus
 from direm.repositories.base import Repository
 
@@ -64,6 +64,7 @@ class ReminderRepository(Repository[Reminder]):
                 Reminder.deleted_at.is_(None),
                 Reminder.next_run_at.is_not(None),
                 Reminder.next_run_at <= now_utc,
+                Reminder.user.has(User.bunker_active.is_(False)),
             )
             .order_by(Reminder.next_run_at.asc(), Reminder.id.asc())
             .limit(limit)

@@ -7,6 +7,7 @@
 - Lightweight `/timezone` picker with common timezone buttons while preserving manual IANA input.
 - Localized Telegram main menu and navigation hubs for reminders, settings and help.
 - Internal user-level Bunker state foundation for future global reminder suppression.
+- Worker-side suppression for reminders owned by users with active Bunker state.
 
 ### Changed
 - Removed stale `Dorpheus` references from DIREM examples and tests.
