@@ -10,6 +10,7 @@ from direm.domain.constants import DeliveryStatus, ReminderStatus, ScheduleType
 from direm.repositories.deliveries import ReminderDeliveryRepository
 from direm.repositories.reminders import ReminderRepository
 from direm.repositories.users import UserRepository
+from direm.services.bunker_service import BunkerService
 from direm.services.reminder_delivery_service import ReminderDeliveryService
 from direm.services.user_service import TelegramUserProfile, UserService
 
@@ -208,3 +209,101 @@ async def test_delivery_wrapper_uses_user_language(session_factory) -> None:
         ).deliver_due_once(now_utc=now)
 
         assert sender.sent_messages == [(user.chat_id, "Еске салу:\nНиет\n\nReturn to intention.")]
+
+
+async def test_suppresses_due_reminder_for_bunker_active_user(session_factory) -> None:
+    async with session_factory() as session:
+        now = datetime(2026, 4, 27, 12, 0, tzinfo=UTC)
+        due_at = datetime(2026, 4, 27, 11, 0, tzinfo=UTC)
+        user = await create_user(session, 1001)
+        reminder = await create_reminder(
+            session,
+            user,
+            title="Focus",
+            status=ReminderStatus.ACTIVE.value,
+            next_run_at=due_at,
+        )
+        await BunkerService(UserRepository(session), clock=lambda: now).activate(user)
+        sender = FakeSender()
+
+        delivered = await ReminderDeliveryService(
+            ReminderRepository(session),
+            ReminderDeliveryRepository(session),
+            sender,
+        ).deliver_due_once(now_utc=now)
+
+        assert delivered == 0
+        assert sender.sent_messages == []
+        assert await list_deliveries(session) == []
+        assert reminder.next_run_at == due_at
+        assert reminder.status == ReminderStatus.ACTIVE.value
+
+
+async def test_due_query_handles_mixed_bunker_and_non_bunker_users(session_factory) -> None:
+    async with session_factory() as session:
+        now = datetime(2026, 4, 27, 12, 0, tzinfo=UTC)
+        due_at = datetime(2026, 4, 27, 11, 0, tzinfo=UTC)
+        active_user = await create_user(session, 1001)
+        bunker_user = await create_user(session, 1002)
+        active_reminder = await create_reminder(
+            session,
+            active_user,
+            title="Deliver",
+            status=ReminderStatus.ACTIVE.value,
+            next_run_at=due_at,
+        )
+        bunker_reminder = await create_reminder(
+            session,
+            bunker_user,
+            title="Suppress",
+            status=ReminderStatus.ACTIVE.value,
+            next_run_at=due_at,
+        )
+        await BunkerService(UserRepository(session), clock=lambda: now).activate(bunker_user)
+        sender = FakeSender()
+
+        delivered = await ReminderDeliveryService(
+            ReminderRepository(session),
+            ReminderDeliveryRepository(session),
+            sender,
+        ).deliver_due_once(now_utc=now)
+
+        deliveries = await list_deliveries(session)
+        assert delivered == 1
+        assert len(sender.sent_messages) == 1
+        assert sender.sent_messages[0][0] == active_user.chat_id
+        assert "Deliver" in sender.sent_messages[0][1]
+        assert "Return to intention." in sender.sent_messages[0][1]
+        assert [delivery.reminder_id for delivery in deliveries] == [active_reminder.id]
+        assert active_reminder.next_run_at == datetime(2026, 4, 27, 12, 30, tzinfo=UTC)
+        assert bunker_reminder.next_run_at == due_at
+        assert bunker_reminder.status == ReminderStatus.ACTIVE.value
+
+
+async def test_delivery_service_guard_suppresses_bunker_reminder_without_record(session_factory) -> None:
+    async with session_factory() as session:
+        now = datetime(2026, 4, 27, 12, 0, tzinfo=UTC)
+        due_at = datetime(2026, 4, 27, 11, 0, tzinfo=UTC)
+        user = await create_user(session, 1001)
+        reminder = await create_reminder(
+            session,
+            user,
+            title="Guarded",
+            status=ReminderStatus.ACTIVE.value,
+            next_run_at=due_at,
+        )
+        await BunkerService(UserRepository(session), clock=lambda: now).activate(user)
+        sender = FakeSender()
+        service = ReminderDeliveryService(
+            ReminderRepository(session),
+            ReminderDeliveryRepository(session),
+            sender,
+        )
+
+        delivered = await service._deliver_one(reminder, now)
+
+        assert delivered is False
+        assert sender.sent_messages == []
+        assert await list_deliveries(session) == []
+        assert reminder.next_run_at == due_at
+        assert reminder.status == ReminderStatus.ACTIVE.value
