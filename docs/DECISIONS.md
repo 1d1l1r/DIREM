@@ -844,7 +844,79 @@ Cons:
 
 ---
 
-## 16. Decision index
+## ADR-017 — Model response check-ins as a separate reminder-domain entity
+
+Status: Accepted
+
+### Context
+
+DIREM now sends reminder messages and records delivery attempts.
+
+The next product layer is letting the user respond to a delivered ping with a small signal such as:
+
+```text
+done
+later
+skipped
+```
+
+If this is modeled only as temporary Telegram callback handling, the concept will be hard to query, test and extend. If it is modeled as a task completion system, DIREM will drift toward task-manager semantics.
+
+### Decision
+
+Model user responses as a separate reminder-domain entity:
+
+```text
+ReminderCheckIn
+```
+
+Recommended table:
+
+```text
+reminder_checkins
+```
+
+Conceptual split:
+
+```text
+Reminder = recurring intention rule and schedule
+Delivery = one concrete sent reminder message
+Check-in = user's response to that delivery
+```
+
+Detailed design:
+
+```text
+docs/design/DIREM-031-response-checkins.md
+```
+
+### Rationale
+
+This keeps response capture explicit without turning DIREM into a task manager.
+
+`ReminderCheckIn` is specific enough to stay in the reminder domain, but separate enough from deliveries to support future history, text responses and reflection features.
+
+`later` is only a recorded response in MVP. It is not snooze and must not mutate reminder scheduling until a dedicated snooze ticket defines that behavior.
+
+### Consequences
+
+Pros:
+
+- clean domain separation;
+- simple future history queries;
+- clear place for response types and user isolation;
+- no hidden schedule mutation from response buttons;
+- Bunker-suppressed reminders naturally have no delivery and no check-in.
+
+Cons:
+
+- future implementation needs a migration and new repository/service layer;
+- callbacks must validate delivery, reminder and user ownership;
+- history and text responses need their own tickets.
+
+---
+
+## 17. Decision index
 
 ```text
 ADR-001 Accepted — Use Python 3.12 + aiogram 3
@@ -863,11 +935,12 @@ ADR-013 Accepted — Avoid catch-up storms after downtime
 ADR-014 Accepted — Keep MVP single-user friendly but multi-user capable
 ADR-015 Accepted — Keep mascot/ReMemBear out of MVP UI
 ADR-016 Accepted — Design Bunker Mode as user-level delivery suppression
+ADR-017 Accepted — Model response check-ins as a separate reminder-domain entity
 ```
 
 ---
 
-## 17. Scope guard for implementation
+## 18. Scope guard for implementation
 
 Text for tickets:
 
@@ -881,7 +954,7 @@ Keep the MVP small and aligned with accepted decisions.
 
 ---
 
-## 18. Short lock
+## 19. Short lock
 
 > DIREM decisions are intentionally boring: small stack, clear services, UTC time, visible versions, no legacy port, no sirens, no dashboard in MVP.  
 > The goal is not to impress the architecture gods.  
