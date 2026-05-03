@@ -118,7 +118,7 @@ Implemented as persisted user setup:
 - repeated `/start` shows a localized home status screen with List, Settings and Help hubs
 - the home status screen shows timezone, language, Bunker state and reminder stats for the current user
 - repeated `/start` preserves the existing timezone
-- `/timezone` stores a validated IANA timezone such as `Asia/Almaty`, with common timezone buttons and manual IANA input
+- `/timezone` stores a validated IANA timezone such as `Asia/Almaty`, with Kazakhstan shortcuts, curated region lists and manual IANA input
 - `/language` stores a selected interface language
 
 Users can now persist an IANA timezone and interface language. Supported interface languages are Russian, Kazakh and English. User-authored reminder titles and message text are not auto-translated.
@@ -185,16 +185,19 @@ Runtime smoke summary:
 21. Tap the bottom `Bunker ON` reply button, then verify active reminders are rescheduled without catch-up delivery.
 22. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
 23. Send `/timezone`, tap `Asia/Almaty`, then verify it is saved.
-24. Send `/timezone`, tap manual input, send `Europe/London`, then verify it is saved.
-25. Send `/timezone`, send an invalid timezone, then verify the recovery text is clear and `/cancel` exits.
-26. Set `/timezone` back to `Asia/Almaty`.
-27. Create a near-due reminder through `/new`.
-28. Wait for worker delivery.
-29. Check `/list` and verify `next_run_at` advanced.
-30. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
-31. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
-32. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
-33. Verify the deleted reminder disappears from `/list`.
+24. Send `/timezone`, tap Other time zones, choose Russia, tap `Moscow - Europe/Moscow`, then verify it is saved.
+25. Send `/timezone`, tap Other time zones, choose Europe, tap `London - Europe/London`, then verify it is saved.
+26. Send `/timezone`, tap Other time zones, choose UTC / GMT, tap `UTC / GMT+0`, then verify the stored timezone is `UTC`.
+27. Send `/timezone`, tap manual input, send `Europe/London`, then verify it is saved.
+28. Send `/timezone`, send an invalid timezone, then verify the recovery text is clear and `/cancel` exits.
+29. Set `/timezone` back to `Asia/Almaty`.
+30. Create a near-due reminder through `/new`.
+31. Wait for worker delivery.
+32. Check `/list` and verify `next_run_at` advanced.
+33. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
+34. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
+35. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
+36. Verify the deleted reminder disappears from `/list`.
 
 Expected:
 
@@ -204,7 +207,7 @@ Expected:
 - idle top-level reply keyboard shows direct Bunker ON/OFF toggle;
 - Telegram command menu shows current commands including `/language`, `/bunker` and `/cancel`;
 - `/language` changes persisted interface language between Russian, Kazakh and English;
-- `/timezone` supports common timezone buttons and manual IANA input;
+- `/timezone` supports Kazakhstan shortcuts, curated region lists and manual IANA input;
 - reminder title/message text is not auto-translated;
 - `/cancel` exits active FSM flows and is friendly when nothing is active;
 - `/new` can create a reminder record;

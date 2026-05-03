@@ -22,6 +22,59 @@ COMMON_TIMEZONES = (
     "UTC",
 )
 
+REGION_TIMEZONES = {
+    "kazakhstan": (
+        ("Asia/Almaty", "Asia/Almaty"),
+        ("Asia/Aqtau", "Asia/Aqtau"),
+        ("Asia/Aqtobe", "Asia/Aqtobe"),
+        ("Asia/Oral", "Asia/Oral"),
+        ("Asia/Qyzylorda", "Asia/Qyzylorda"),
+    ),
+    "russia": (
+        ("Moscow", "Europe/Moscow"),
+        ("Yekaterinburg", "Asia/Yekaterinburg"),
+        ("Novosibirsk", "Asia/Novosibirsk"),
+        ("Krasnoyarsk", "Asia/Krasnoyarsk"),
+        ("Irkutsk", "Asia/Irkutsk"),
+        ("Yakutsk", "Asia/Yakutsk"),
+        ("Vladivostok", "Asia/Vladivostok"),
+        ("Kamchatka", "Asia/Kamchatka"),
+    ),
+    "europe": (
+        ("London", "Europe/London"),
+        ("Berlin / Paris / Rome", "Europe/Berlin"),
+        ("Warsaw", "Europe/Warsaw"),
+        ("Helsinki", "Europe/Helsinki"),
+        ("Istanbul", "Europe/Istanbul"),
+    ),
+    "asia": (
+        ("Tashkent", "Asia/Tashkent"),
+        ("Dubai", "Asia/Dubai"),
+        ("Tbilisi", "Asia/Tbilisi"),
+        ("Tokyo", "Asia/Tokyo"),
+        ("Seoul", "Asia/Seoul"),
+        ("Shanghai", "Asia/Shanghai"),
+        ("Singapore", "Asia/Singapore"),
+        ("Bangkok", "Asia/Bangkok"),
+    ),
+    "america": (
+        ("New York", "America/New_York"),
+        ("Chicago", "America/Chicago"),
+        ("Denver", "America/Denver"),
+        ("Los Angeles", "America/Los_Angeles"),
+        ("Toronto", "America/Toronto"),
+        ("Mexico City", "America/Mexico_City"),
+        ("Sao Paulo", "America/Sao_Paulo"),
+    ),
+}
+
+REGION_KEYS = (*REGION_TIMEZONES.keys(), "utc")
+CURATED_TIMEZONES = frozenset(
+    timezone
+    for options in REGION_TIMEZONES.values()
+    for _, timezone in options
+) | frozenset(COMMON_TIMEZONES)
+
 
 @router.message(Command("timezone"))
 async def handle_timezone_command(message: Message, state: FSMContext, session: AsyncSession) -> None:
@@ -58,12 +111,46 @@ async def handle_timezone_callback(callback: CallbackQuery, state: FSMContext, s
         await callback.answer()
         return
 
+    if data == "timezone:other":
+        await callback.message.answer(
+            t(user.language_code, "timezone.region_prompt"),
+            reply_markup=_region_keyboard(user.language_code),
+        )
+        await callback.answer()
+        return
+
+    if data == "timezone:back":
+        await callback.message.answer(
+            t(user.language_code, "timezone.picker_prompt"),
+            reply_markup=_timezone_keyboard(user.language_code),
+        )
+        await callback.answer()
+        return
+
+    if data.startswith("timezone:region:"):
+        region = data.removeprefix("timezone:region:")
+        if region not in REGION_KEYS:
+            await callback.answer(t(user.language_code, "timezone.callback_invalid"), show_alert=True)
+            return
+        if region == "utc":
+            await callback.message.answer(
+                t(user.language_code, "timezone.utc_explain"),
+                reply_markup=_utc_keyboard(user.language_code),
+            )
+        else:
+            await callback.message.answer(
+                t(user.language_code, "timezone.region_list_prompt", region=t(user.language_code, f"timezone.region.{region}")),
+                reply_markup=_region_timezone_keyboard(region, user.language_code),
+            )
+        await callback.answer()
+        return
+
     if not data.startswith("timezone:set:"):
         await callback.answer(t(user.language_code, "timezone.callback_invalid"), show_alert=True)
         return
 
     timezone = data.removeprefix("timezone:set:")
-    if timezone not in COMMON_TIMEZONES:
+    if timezone not in CURATED_TIMEZONES:
         await callback.answer(t(user.language_code, "timezone.callback_invalid"), show_alert=True)
         return
 
@@ -76,7 +163,7 @@ async def handle_timezone_callback(callback: CallbackQuery, state: FSMContext, s
 
     await state.clear()
     await callback.message.answer(
-        t(user.language_code, "timezone.updated", timezone=user.timezone),
+        t(user.language_code, "timezone.updated", timezone=_timezone_display_name(user.timezone, user.language_code)),
         reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
     )
     await callback.answer()
@@ -107,7 +194,7 @@ async def handle_timezone_input(message: Message, state: FSMContext, session: As
 
     await state.clear()
     await message.answer(
-        t(user.language_code, "timezone.updated", timezone=user.timezone),
+        t(user.language_code, "timezone.updated", timezone=_timezone_display_name(user.timezone, user.language_code)),
         reply_markup=action_result_reply_keyboard(user.language_code, bunker_active=user.bunker_active),
     )
 
@@ -117,11 +204,51 @@ def _timezone_keyboard(language_code: str | None = None) -> InlineKeyboardMarkup
         [InlineKeyboardButton(text=_timezone_button_text(timezone, language_code), callback_data=f"timezone:set:{timezone}")]
         for timezone in COMMON_TIMEZONES
     ]
+    rows.append([InlineKeyboardButton(text=t(language_code, "timezone.other_button"), callback_data="timezone:other")])
     rows.append([InlineKeyboardButton(text=t(language_code, "timezone.manual_button"), callback_data="timezone:manual")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def _timezone_button_text(timezone: str, language_code: str | None = None) -> str:
+    if timezone == "UTC":
+        return t(language_code, "timezone.utc_label")
+    return timezone
+
+
+def _region_keyboard(language_code: str | None = None) -> InlineKeyboardMarkup:
+    rows = [
+        [InlineKeyboardButton(text=t(language_code, f"timezone.region.{region}"), callback_data=f"timezone:region:{region}")]
+        for region in REGION_KEYS
+    ]
+    rows.append([InlineKeyboardButton(text=t(language_code, "timezone.back_button"), callback_data="timezone:back")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _region_timezone_keyboard(region: str, language_code: str | None = None) -> InlineKeyboardMarkup:
+    rows = [
+        [InlineKeyboardButton(text=_format_region_timezone_button(label, timezone), callback_data=f"timezone:set:{timezone}")]
+        for label, timezone in REGION_TIMEZONES[region]
+    ]
+    rows.append([InlineKeyboardButton(text=t(language_code, "timezone.back_button"), callback_data="timezone:other")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _utc_keyboard(language_code: str | None = None) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(language_code, "timezone.utc_label"), callback_data="timezone:set:UTC")],
+            [InlineKeyboardButton(text=t(language_code, "timezone.back_button"), callback_data="timezone:other")],
+        ]
+    )
+
+
+def _format_region_timezone_button(label: str, timezone: str) -> str:
+    if label == timezone:
+        return timezone
+    return f"{label} - {timezone}"
+
+
+def _timezone_display_name(timezone: str, language_code: str | None = None) -> str:
     if timezone == "UTC":
         return t(language_code, "timezone.utc_label")
     return timezone

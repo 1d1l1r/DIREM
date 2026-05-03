@@ -51,3 +51,14 @@ def test_help_text_is_user_facing(language_code) -> None:
     assert "Worker" not in help_text
     assert "webhook" not in help_text.lower()
     assert "dashboard" not in help_text.lower()
+
+
+@pytest.mark.parametrize("language_code", ["ru", "kk", "en"])
+def test_timezone_picker_v2_copy_exists(language_code) -> None:
+    assert t(language_code, "timezone.other_button")
+    assert t(language_code, "timezone.region_prompt")
+    assert t(language_code, "timezone.region.russia")
+    assert t(language_code, "timezone.region.europe")
+    assert t(language_code, "timezone.region.asia")
+    assert t(language_code, "timezone.region.america")
+    assert "GMT+0" in t(language_code, "timezone.utc_label")

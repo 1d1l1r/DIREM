@@ -5,7 +5,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from direm.bot.handlers.timezone import (
     COMMON_TIMEZONES,
+    _region_keyboard,
     _timezone_keyboard,
+    _utc_keyboard,
     handle_timezone_callback,
     handle_timezone_command,
     handle_timezone_input,
@@ -64,8 +66,9 @@ def test_timezone_keyboard_contains_common_choices_and_manual() -> None:
     keyboard = _timezone_keyboard("en")
 
     callback_data = [row[0].callback_data for row in keyboard.inline_keyboard]
-    assert callback_data == [*(f"timezone:set:{timezone}" for timezone in COMMON_TIMEZONES), "timezone:manual"]
-    assert keyboard.inline_keyboard[-2][0].text == "UTC (GMT+0)"
+    assert callback_data == [*(f"timezone:set:{timezone}" for timezone in COMMON_TIMEZONES), "timezone:other", "timezone:manual"]
+    assert keyboard.inline_keyboard[-3][0].text == "UTC / GMT+0"
+    assert keyboard.inline_keyboard[-2][0].text == "Other time zones"
     assert keyboard.inline_keyboard[-1][0].text == "Enter manually"
 
 
@@ -83,6 +86,28 @@ async def test_timezone_command_renders_current_timezone_and_picker(session_fact
     assert reply_keyboard.keyboard[0][0].text == "Cancel"
     assert picker_prompt == "Common choices:"
     assert inline_keyboard.inline_keyboard[0][0].callback_data == "timezone:set:Asia/Almaty"
+
+
+def test_region_keyboard_contains_expected_regions() -> None:
+    keyboard = _region_keyboard("en")
+
+    assert [row[0].text for row in keyboard.inline_keyboard] == [
+        "Kazakhstan",
+        "Russia",
+        "Europe",
+        "Asia",
+        "America",
+        "UTC / GMT",
+        "Back",
+    ]
+    assert keyboard.inline_keyboard[1][0].callback_data == "timezone:region:russia"
+
+
+def test_utc_keyboard_exposes_utc_storage_value() -> None:
+    keyboard = _utc_keyboard("en")
+
+    assert keyboard.inline_keyboard[0][0].text == "UTC / GMT+0"
+    assert keyboard.inline_keyboard[0][0].callback_data == "timezone:set:UTC"
 
 
 async def test_timezone_callback_persists_almaty(session_factory) -> None:
@@ -127,6 +152,83 @@ async def test_timezone_manual_callback_keeps_manual_input_path(session_factory)
     assert callback.message.answers[0][1].keyboard[0][0].text == "Cancel"
 
 
+async def test_timezone_other_callback_renders_region_picker(session_factory) -> None:
+    async with session_factory() as session:
+        callback = FakeCallback("timezone:other", language_code="en")
+        state = FakeState()
+
+        await handle_timezone_callback(callback, state, session)
+
+    assert callback.message.answers[0][0] == "Choose a region:"
+    assert callback.message.answers[0][1].inline_keyboard[1][0].text == "Russia"
+
+
+@pytest.mark.parametrize(
+    ("region", "expected_text", "expected_callback"),
+    [
+        ("russia", "Moscow - Europe/Moscow", "timezone:set:Europe/Moscow"),
+        ("europe", "London - Europe/London", "timezone:set:Europe/London"),
+        ("asia", "Tokyo - Asia/Tokyo", "timezone:set:Asia/Tokyo"),
+        ("america", "New York - America/New_York", "timezone:set:America/New_York"),
+    ],
+)
+async def test_timezone_region_callback_renders_curated_options(session_factory, region, expected_text, expected_callback) -> None:
+    async with session_factory() as session:
+        callback = FakeCallback(f"timezone:region:{region}", language_code="en")
+        state = FakeState()
+
+        await handle_timezone_callback(callback, state, session)
+
+    buttons = [row[0] for row in callback.message.answers[0][1].inline_keyboard]
+    assert any(button.text == expected_text and button.callback_data == expected_callback for button in buttons)
+
+
+async def test_timezone_utc_region_callback_renders_explanation(session_factory) -> None:
+    async with session_factory() as session:
+        callback = FakeCallback("timezone:region:utc", language_code="en")
+        state = FakeState()
+
+        await handle_timezone_callback(callback, state, session)
+
+    assert "zero-offset" in callback.message.answers[0][0]
+    assert callback.message.answers[0][1].inline_keyboard[0][0].callback_data == "timezone:set:UTC"
+
+
+@pytest.mark.parametrize(
+    "timezone",
+    ["Europe/Moscow", "Europe/London", "Asia/Tokyo", "America/New_York"],
+)
+async def test_timezone_callback_persists_curated_region_timezone(session_factory, timezone: str) -> None:
+    async with session_factory() as session:
+        callback = FakeCallback(f"timezone:set:{timezone}", language_code="en")
+        state = FakeState()
+
+        await handle_timezone_callback(callback, state, session)
+        await session.commit()
+
+        user = await UserRepository(session).get_by_telegram_user_id(1001)
+
+    assert user is not None
+    assert user.timezone == timezone
+    assert state.cleared is True
+    assert callback.message.answers[0][0] == f"Timezone updated: {timezone}"
+
+
+async def test_timezone_callback_persists_utc_with_clear_display(session_factory) -> None:
+    async with session_factory() as session:
+        callback = FakeCallback("timezone:set:UTC", language_code="en")
+        state = FakeState()
+
+        await handle_timezone_callback(callback, state, session)
+        await session.commit()
+
+        user = await UserRepository(session).get_by_telegram_user_id(1001)
+
+    assert user is not None
+    assert user.timezone == "UTC"
+    assert callback.message.answers[0][0] == "Timezone updated: UTC / GMT+0"
+
+
 async def test_timezone_manual_input_still_persists_iana_timezone(session_factory) -> None:
     async with session_factory() as session:
         message = FakeMessage(text="Europe/London", language_code="en")
@@ -156,7 +258,7 @@ async def test_timezone_invalid_input_returns_recovery_text(session_factory) -> 
     assert "Cancel button or /cancel" in message.answers[0][0]
     assert message.answers[0][1].keyboard[0][0].text == "Cancel"
     assert message.answers[1][0] == "Common choices:"
-    assert message.answers[1][1].inline_keyboard[-2][0].text == "UTC (GMT+0)"
+    assert message.answers[1][1].inline_keyboard[-3][0].text == "UTC / GMT+0"
 
 
 async def test_timezone_invalid_callback_does_not_crash(session_factory) -> None:

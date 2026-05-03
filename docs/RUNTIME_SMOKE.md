@@ -41,16 +41,21 @@ Owner checklist:
 21. Tap the bottom `Bunker ON` reply button, then verify active reminders are rescheduled without catch-up delivery.
 22. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
 23. Send `/timezone`, tap `Asia/Almaty`, then verify it is saved.
-24. Send `/timezone`, tap manual input, send `Europe/London`, then verify it is saved.
-25. Send `/timezone`, send an invalid timezone, then verify the recovery text is clear and `/cancel` exits.
-26. Set `/timezone` back to `Asia/Almaty`.
-27. Create a near-due reminder through `/new`.
-28. Wait for worker delivery.
-29. Check `/list` and verify `next_run_at` advanced.
-30. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
-31. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
-32. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
-33. Verify the deleted reminder disappears from `/list`.
+24. Send `/timezone`, tap Other time zones, choose Russia, tap `Moscow - Europe/Moscow`, then verify it is saved.
+25. Send `/timezone`, tap Other time zones, choose Europe, tap `London - Europe/London`, then verify it is saved.
+26. Send `/timezone`, tap Other time zones, choose Asia, tap `Tokyo - Asia/Tokyo`, then verify it is saved.
+27. Send `/timezone`, tap Other time zones, choose America, tap `New York - America/New_York`, then verify it is saved.
+28. Send `/timezone`, tap Other time zones, choose UTC / GMT, tap `UTC / GMT+0`, then verify the stored timezone is `UTC`.
+29. Send `/timezone`, tap manual input, send `Europe/Madrid`, then verify it is saved.
+30. Send `/timezone`, send an invalid timezone, then verify the recovery text is clear and `/cancel` exits.
+31. Set `/timezone` back to `Asia/Almaty`.
+32. Create a near-due reminder through `/new`.
+33. Wait for worker delivery.
+34. Check `/list` and verify `next_run_at` advanced.
+35. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
+36. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
+37. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
+38. Verify the deleted reminder disappears from `/list`.
 
 Expected runtime behavior:
 
@@ -58,7 +63,7 @@ Expected runtime behavior:
 - first-time `/start` shows lightweight guidance without forcing a tutorial;
 - existing-user `/start` shows a localized home status screen with List, Settings and Help inline navigation;
 - `/language` persists Russian, Kazakh and English interface choices;
-- `/timezone` supports common timezone buttons and manual IANA input;
+- `/timezone` supports Kazakhstan shortcuts, curated region lists and manual IANA input;
 - `/help` is grouped by purpose and does not show internal worker/retry/dashboard/webhook notes;
 - idle state shows a localized Bunker ON/OFF reply button;
 - active FSM flows show a localized Cancel reply button;
