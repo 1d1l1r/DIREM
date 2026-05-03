@@ -4,7 +4,7 @@
 
 ### Added
 - Lightweight localized first-run onboarding after `/start`.
-- Lightweight `/timezone` picker with common timezone buttons while preserving manual IANA input.
+- Expanded `/timezone` picker with Kazakhstan shortcuts, curated region lists and clearer UTC/GMT wording while preserving manual IANA input.
 - Localized Telegram main menu and navigation hubs for reminders, settings and help.
 - Internal user-level Bunker state foundation for future global reminder suppression.
 - Worker-side suppression for reminders owned by users with active Bunker state.
