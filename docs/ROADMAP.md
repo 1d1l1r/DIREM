@@ -2,14 +2,14 @@
 
 ## 0. Purpose
 
-This document keeps DIREM's future work organized after the `direm-v0.1.0` Core MVP release.
+This document keeps DIREM's future work organized after the `direm-v0.2.0` release.
 
 Roadmap entries are plans, not implemented features. Implementation still requires an active ticket, a branch, checks and review.
 
 Current released state:
 
 ```text
-direm-v0.1.0 - Core MVP
+direm-v0.2.0 - Bunker and UX polish
 ```
 
 ## 1. Roadmap Guard
@@ -54,20 +54,20 @@ Still not implemented:
 - AI translation.
 - Web UI.
 
-## 3. v0.1.1 - Polish / UX / Small Fixes
+## 3. Completed Post-v0.1.0 Polish
 
 Goal:
 
-Make the released Core MVP easier to use without changing the data model or adding broad new infrastructure.
+Make the released Core MVP easier to use without changing the product into a platform.
 
-Candidate tickets:
+Shipped during the v0.2.0 cycle:
 
 1. Guided first-run onboarding.
-2. Timezone picker UX.
-3. Russian/Kazakh/English copy polish after real usage.
-4. Empty state and confirmation copy polish.
-5. Runtime smoke documentation refinements from owner testing.
-6. Bunker Mode design.
+2. Timezone picker UX and curated region picker.
+3. Russian/Kazakh/English copy polish after runtime usage.
+4. Main menu and hub navigation.
+5. Home status screen with user reminder stats.
+6. Runtime smoke documentation refinements from owner testing.
 
 Scope lock:
 
@@ -75,44 +75,67 @@ Scope lock:
 - No delivery history.
 - No reminder editing.
 - No dashboard/webhook.
-- No migrations unless a small bug fix truly requires one.
 
-Expected release tag:
+## 4. Released: v0.2.0 - Bunker and UX Polish
 
-```text
-direm-v0.1.1
-```
-
-## 4. v0.2.0 - Functional Expansion
-
-Goal:
-
-Add the first post-MVP functional capabilities while keeping the Telegram-only product shape.
-
-Candidate tickets:
-
-1. Bunker Mode implementation.
-2. Delivery history command.
-3. Retry policy MVP.
-4. Reminder editing.
-5. Reminder details view.
-6. Safer worker observability and owner-readable diagnostics.
-
-Scope lock:
-
-- No dashboard.
-- No webhook mode.
-- No Redis/Celery unless a specific reliability ticket proves the need.
-- No AI translation.
-- No web UI.
-
-Expected release tag:
+Released as tag:
 
 ```text
 direm-v0.2.0
 ```
 
-## 5. Parked / Later
+Implemented:
+
+- Bunker state foundation.
+- Worker suppression for Bunker-active users.
+- Telegram Bunker UX.
+- Atomic Bunker exit rescheduling for active reminders.
+- Home status and Bunker reply-keyboard toggle.
+- Main menu navigation polish.
+- Timezone picker v2 with curated regions.
+- README hero image and v0.2.0 release docs.
+
+Still not implemented:
+
+- Delivery history command.
+- Retry scheduler.
+- Reminder editing.
+- Reminder details view.
+- Dashboard.
+- Webhook mode.
+- Redis/Celery unless a specific reliability ticket proves the need.
+- AI translation.
+- Web UI.
+
+## 5. v0.3.0 - Response Check-ins / Reflection Foundation
+
+Goal:
+
+Let DIREM record how a user responded to delivered reminders while keeping reminder scheduling separate from response capture.
+
+Candidate tickets:
+
+1. Check-in data foundation.
+2. Check-in buttons MVP for delivered reminders.
+3. Check-in history command.
+4. Text check-ins.
+5. Snooze / Later scheduling as a separate feature after response capture is proven.
+
+Scope lock:
+
+- `later` is a recorded response, not snooze, until a dedicated snooze ticket is accepted.
+- No analytics dashboard.
+- No AI summaries.
+- No task-manager completion model.
+- No reminder editing unless covered by its own active ticket.
+
+Expected release tag:
+
+```text
+direm-v0.3.0
+```
+
+## 6. Parked / Later
 
 These ideas are saved but not scheduled for the next release lanes.
 
@@ -169,15 +192,15 @@ Possible later direction:
 
 Not now because it changes the product surface and operational complexity.
 
-## 6. Candidate Version Sequence
+## 7. Candidate Version Sequence
 
 ```text
 v0.1.0 - Core MVP - released
-v0.1.1 - UX polish and small fixes
-v0.2.0 - Bunker mode, delivery history, retries, editing
-v0.3.0 - templates / rituals
-v0.4.0 - reflection and response history
-v0.5.0 - project pulse
+v0.2.0 - Bunker mode and UX polish - released
+v0.3.0 - response check-ins and reflection foundation
+v0.4.0 - delivery history, retries, editing
+v0.5.0 - templates / rituals
+v0.6.0 - project pulse
 v1.0.0 - stable self-hosted release
 ```
 

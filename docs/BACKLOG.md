@@ -1,104 +1,29 @@
-# DIREM - Post-v0.1.0 Backlog
+# DIREM - Post-v0.2.0 Backlog
 
 This backlog is a planning document. Nothing here is implemented until a dedicated ticket is accepted and merged.
 
-## v0.1.1 - Polish / UX / Small Fixes
+## Shipped Through v0.2.0
 
-### DIREM-019 - Guided First-run Onboarding
+These lines are historical context, not open backlog.
 
-Purpose:
-Help a new user understand the shortest useful path after `/start`.
+Released:
 
-Likely scope:
-- friendly first-run text;
-- point to `/language`, `/timezone` and `/new`;
-- avoid a heavy tutorial.
+- `direm-v0.1.0` - Core MVP.
+- `direm-v0.2.0` - Bunker and UX polish.
 
-Out of scope:
-- onboarding state machine unless strictly needed;
-- new reminder features.
+Notable shipped work:
 
-### DIREM-020 - Timezone Picker UX
+- guided first-run onboarding;
+- timezone picker UX and curated region picker;
+- language and copy polish;
+- Bunker Mode design and implementation;
+- worker suppression while Bunker is active;
+- home status screen and main menu hubs;
+- README hero image and v0.2.0 release notes.
 
-Purpose:
-Reduce friction for users who do not know IANA timezone names.
+## Post-v0.2.0 Open Backlog
 
-Likely scope:
-- guided examples;
-- common timezone shortcuts;
-- better invalid timezone recovery.
-
-Out of scope:
-- full country/continent browser unless explicitly approved;
-- automatic timezone detection.
-
-### DIREM-021 - Language and Copy Polish
-
-Purpose:
-Polish Russian, Kazakh and English user-facing copy after real runtime usage.
-
-Likely scope:
-- `/help`;
-- `/new`;
-- `/timezone`;
-- control flow prompts;
-- worker delivery wrapper.
-
-Out of scope:
-- AI translation;
-- automatic translation of user-authored reminder content.
-
-### DIREM-022 - Empty States and Confirmation Polish
-
-Purpose:
-Make empty lists, invalid choices and confirmation screens clearer.
-
-Likely scope:
-- `/list` empty state;
-- `/pause`, `/resume`, `/delete` empty states;
-- stale callback copy;
-- confirmation wording.
-
-Out of scope:
-- new commands;
-- reminder editing.
-
-### DIREM-023 - Bunker Mode Design
-
-Purpose:
-Design user-level Bunker Mode before implementation.
-
-Scope:
-- define activation/deactivation behavior;
-- define worker suppression behavior;
-- define reminder state restore semantics;
-- recommend data model and migration direction.
-
-Out of scope:
-- `/bunker` command;
-- migrations;
-- worker changes;
-- runtime implementation.
-
-## v0.2.0 - Functional Expansion
-
-### Bunker Mode Implementation
-
-Purpose:
-Let a user temporarily silence all DIREM reminder delivery without rewriting individual reminder statuses.
-
-Likely scope:
-- user-level Bunker state;
-- worker suppression;
-- Telegram UX;
-- active reminder `next_run_at` recalculation on exit.
-
-Out of scope:
-- timed Bunker;
-- per-reminder snooze;
-- dashboard or analytics.
-
-### DIREM-024 - Delivery History Command
+### Delivery History Command
 
 Purpose:
 Let a user inspect recent reminder delivery events.
@@ -113,7 +38,7 @@ Out of scope:
 - analytics;
 - exports.
 
-### DIREM-025 - Retry Policy MVP
+### Retry Policy MVP
 
 Purpose:
 Handle failed Telegram sends more deliberately than logging and recording once.
@@ -127,7 +52,7 @@ Out of scope:
 - exponential backoff platform;
 - Redis/Celery unless separately approved.
 
-### DIREM-026 - Reminder Editing
+### Reminder Editing
 
 Purpose:
 Allow changing existing reminder title/message/schedule without delete-and-recreate.
@@ -141,7 +66,7 @@ Out of scope:
 - bulk editing;
 - web UI.
 
-### DIREM-027 - Reminder Details View
+### Reminder Details View
 
 Purpose:
 Show one reminder in a clearer focused view before heavier editing arrives.
@@ -153,6 +78,109 @@ Likely scope:
 Out of scope:
 - editing;
 - delivery history timeline.
+
+## v0.3.0 - Response Check-ins / Reflection Foundation
+
+### DIREM-031 - Response Check-ins Design
+
+Purpose:
+Design Response Check-ins as a separate DIREM domain concept before implementation.
+
+Scope:
+- define Reminder / Delivery / Check-in relationships;
+- choose entity and table naming direction;
+- define MVP response types;
+- define Bunker and repeat-click behavior;
+- split future implementation tickets.
+
+Out of scope:
+- migrations;
+- Telegram callbacks;
+- history command;
+- text responses;
+- snooze.
+
+### DIREM-032 - Check-in Data Foundation
+
+Purpose:
+Add persistence for user responses to delivered reminders.
+
+Likely scope:
+- `ReminderCheckIn` model;
+- `reminder_checkins` migration;
+- response type constants;
+- repository/service skeleton;
+- schema and service tests.
+
+Out of scope:
+- worker delivery buttons;
+- history command;
+- text responses;
+- snooze.
+
+### DIREM-033 - Check-in Buttons MVP
+
+Purpose:
+Let a user mark a delivered reminder as done, later or skipped.
+
+Likely scope:
+- inline buttons on successful reminder deliveries;
+- callback handler;
+- user isolation;
+- repeat-click behavior;
+- localized confirmations.
+
+Out of scope:
+- changing reminder schedules;
+- delivery history command;
+- free-text response capture.
+
+### DIREM-034 - Check-in History Command
+
+Purpose:
+Show recent reminder deliveries and user check-ins.
+
+Likely scope:
+- user-scoped history view;
+- recent check-ins;
+- delivery/check-in status display.
+
+Out of scope:
+- analytics dashboard;
+- exports;
+- AI summaries.
+
+### DIREM-035 - Text Check-ins
+
+Purpose:
+Allow optional user-authored response text after a reminder delivery.
+
+Likely scope:
+- text capture flow;
+- persistence in nullable response text;
+- privacy/copy rules;
+- tests for preserving user-authored content.
+
+Out of scope:
+- automatic translation;
+- AI summarization;
+- public sharing.
+
+### DIREM-036 - Snooze / Later Scheduling
+
+Purpose:
+Define and implement real snooze behavior separately from the MVP `later` response.
+
+Likely scope:
+- explicit snooze choices;
+- schedule mutation rules;
+- no-catch-up-storm behavior;
+- tests for next run calculation.
+
+Out of scope:
+- treating D031/D033 `later` as implicit snooze;
+- retry scheduler;
+- dashboard.
 
 ## Parked / Later
 
