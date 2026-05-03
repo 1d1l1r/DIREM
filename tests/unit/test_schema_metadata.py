@@ -1,9 +1,15 @@
 from direm.db.base import Base
-from direm.db.models import Reminder, ReminderDelivery, User, UserState
+from direm.db.models import Reminder, ReminderCheckIn, ReminderDelivery, User, UserState
 
 
 def test_domain_tables_are_registered() -> None:
-    assert {"users", "reminders", "reminder_deliveries", "user_states"}.issubset(Base.metadata.tables)
+    assert {
+        "users",
+        "reminders",
+        "reminder_deliveries",
+        "reminder_checkins",
+        "user_states",
+    }.issubset(Base.metadata.tables)
 
 
 def test_users_table_has_language_code() -> None:
@@ -49,6 +55,29 @@ def test_delivery_table_has_foundation_columns() -> None:
         assert name in columns
 
 
+def test_reminder_checkins_table_has_foundation_columns() -> None:
+    columns = ReminderCheckIn.__table__.columns
+
+    for name in (
+        "id",
+        "user_id",
+        "reminder_id",
+        "reminder_delivery_id",
+        "response_type",
+        "response_text",
+        "created_at",
+        "updated_at",
+    ):
+        assert name in columns
+
+
+def test_reminder_checkins_enforce_one_current_response_per_delivery() -> None:
+    constraints = {constraint.name for constraint in ReminderCheckIn.__table__.constraints}
+
+    assert "uq_reminder_checkins_delivery_id" in constraints
+    assert "ck_reminder_checkins_response_type" in constraints
+
+
 def test_user_states_table_has_foundation_columns() -> None:
     columns = UserState.__table__.columns
 
@@ -59,4 +88,7 @@ def test_user_states_table_has_foundation_columns() -> None:
 def test_relationships_are_declared_without_business_logic() -> None:
     assert Reminder.user.property.mapper.class_ is User
     assert ReminderDelivery.reminder.property.mapper.class_ is Reminder
+    assert ReminderCheckIn.user.property.mapper.class_ is User
+    assert ReminderCheckIn.reminder.property.mapper.class_ is Reminder
+    assert ReminderCheckIn.delivery.property.mapper.class_ is ReminderDelivery
     assert UserState.user.property.mapper.class_ is User
