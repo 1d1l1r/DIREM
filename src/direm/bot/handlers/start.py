@@ -38,6 +38,6 @@ async def handle_start(message: Message, session: AsyncSession) -> None:
         return
 
     await message.answer(
-        render_main_menu_text(user.language_code, user.timezone),
-        reply_markup=main_menu_keyboard(user.language_code),
+        render_main_menu_text(user.language_code, user.timezone, bunker_active=user.bunker_active),
+        reply_markup=main_menu_keyboard(user.language_code, bunker_active=user.bunker_active),
     )

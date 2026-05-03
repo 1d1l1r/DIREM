@@ -36,6 +36,7 @@ def test_bot_command_menu_contains_current_commands() -> None:
         "pause",
         "resume",
         "delete",
+        "bunker",
         "version",
         "credits",
         "cancel",

@@ -47,6 +47,7 @@ def test_help_text_is_user_facing(language_code) -> None:
 
     assert "/new" in help_text
     assert "/delete" in help_text
+    assert "/bunker" in help_text
     assert "Worker" not in help_text
     assert "webhook" not in help_text.lower()
     assert "dashboard" not in help_text.lower()

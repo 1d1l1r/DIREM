@@ -55,6 +55,18 @@ class ReminderRepository(Repository[Reminder]):
         )
         return list(result.scalars().all())
 
+    async def list_active_for_user(self, user_id: int) -> list[Reminder]:
+        result = await self.session.execute(
+            select(Reminder)
+            .where(
+                Reminder.user_id == user_id,
+                Reminder.status == ReminderStatus.ACTIVE.value,
+                Reminder.deleted_at.is_(None),
+            )
+            .order_by(Reminder.id.asc())
+        )
+        return list(result.scalars().all())
+
     async def list_due(self, *, now_utc: datetime, limit: int) -> list[Reminder]:
         result = await self.session.execute(
             select(Reminder)
