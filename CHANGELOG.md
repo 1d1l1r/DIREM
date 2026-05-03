@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- Internal `ReminderCheckIn` persistence foundation for future response check-ins.
+
 ## [0.2.0] - 2026-05-03
 
 ### Added

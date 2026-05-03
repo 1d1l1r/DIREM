@@ -16,3 +16,9 @@ class DeliveryStatus(StrEnum):
     SENT = "sent"
     FAILED = "failed"
     SKIPPED = "skipped"
+
+
+class CheckInResponseType(StrEnum):
+    DONE = "done"
+    LATER = "later"
+    SKIPPED = "skipped"
