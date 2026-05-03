@@ -6,7 +6,7 @@
 
 DIREM is a Telegram-first system for regular returns to intention.
 
-Current target: `DIREM v0.1.0 — Core MVP`.
+Current release state: `DIREM v0.2.0 — Bunker and UX polish`.
 
 This repository currently contains the DIREM Core MVP: bot service, worker delivery MVP, PostgreSQL, SQLAlchemy 2, Alembic, version metadata, credits metadata, user registration with lightweight first-run guidance, persisted user timezones and languages, `/new` reminder record creation, `/list` reminder record viewing, `/pause` and `/resume` status updates, `/delete` reminder record deletion, domain constants, database models for users/reminders/deliveries/user states, and tested schedule calculation functions.
 
