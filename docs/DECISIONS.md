@@ -773,6 +773,77 @@ MVP должен быть ясным, коротким и функциональ
 
 ---
 
+## ADR-016 — Design Bunker Mode as user-level delivery suppression
+
+Status: Accepted
+
+### Context
+
+DIREM needs a future Bunker Mode: a user-level global pause that temporarily silences reminders.
+
+The existing model already has reminder-level statuses:
+
+```text
+active
+paused
+deleted
+```
+
+Rewriting every active reminder to `paused` on Bunker activation would make restore behavior fragile. The system would need to remember which reminders were already paused, which were active, and which were created during Bunker.
+
+### Decision
+
+Design Bunker Mode as user-level delivery suppression.
+
+Recommended direction:
+
+- Bunker is per user.
+- Bunker does not rewrite reminder statuses.
+- Worker checks user Bunker state before sending.
+- Active reminders remain active but are not delivered while Bunker is on.
+- Paused reminders remain paused.
+- Deleted reminders remain deleted.
+- Reminders created during Bunker are allowed and are suppressed until exit.
+- On exit, active reminders get fresh `next_run_at` values using existing schedule calculation and no-catch-up-storm behavior.
+
+Detailed design:
+
+```text
+docs/design/DIREM-023-bunker-mode.md
+```
+
+### Rationale
+
+This keeps Bunker simple and avoids a fragile per-reminder status snapshot.
+
+The user intent is "silence DIREM for now", not "mutate all my reminders".
+
+User-level suppression also keeps reminder controls meaningful during Bunker:
+
+- `/pause` still means explicitly paused;
+- `/resume` still means explicitly active;
+- deleted reminders remain deleted;
+- worker behavior has one additional user-state check.
+
+### Consequences
+
+Pros:
+
+- simpler restore behavior;
+- less risk of losing original reminder status;
+- no delivery storm after Bunker exits;
+- clearer data model;
+- Bunker can be implemented in small tickets.
+
+Cons:
+
+- implementation needs a user-level Bunker state migration;
+- worker must check user state;
+- active reminders may remain due while Bunker is active unless query filtering is added;
+- `/list` may need future copy to explain that active reminders are currently suppressed by Bunker.
+
+---
+
 ## 16. Decision index
 
 ```text
@@ -791,6 +862,7 @@ ADR-012 Accepted — Reject overnight active windows in MVP
 ADR-013 Accepted — Avoid catch-up storms after downtime
 ADR-014 Accepted — Keep MVP single-user friendly but multi-user capable
 ADR-015 Accepted — Keep mascot/ReMemBear out of MVP UI
+ADR-016 Accepted — Design Bunker Mode as user-level delivery suppression
 ```
 
 ---

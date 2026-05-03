@@ -63,9 +63,42 @@ Out of scope:
 - new commands;
 - reminder editing.
 
+### DIREM-023 - Bunker Mode Design
+
+Purpose:
+Design user-level Bunker Mode before implementation.
+
+Scope:
+- define activation/deactivation behavior;
+- define worker suppression behavior;
+- define reminder state restore semantics;
+- recommend data model and migration direction.
+
+Out of scope:
+- `/bunker` command;
+- migrations;
+- worker changes;
+- runtime implementation.
+
 ## v0.2.0 - Functional Expansion
 
-### DIREM-023 - Delivery History Command
+### Bunker Mode Implementation
+
+Purpose:
+Let a user temporarily silence all DIREM reminder delivery without rewriting individual reminder statuses.
+
+Likely scope:
+- user-level Bunker state;
+- worker suppression;
+- Telegram UX;
+- active reminder `next_run_at` recalculation on exit.
+
+Out of scope:
+- timed Bunker;
+- per-reminder snooze;
+- dashboard or analytics.
+
+### DIREM-024 - Delivery History Command
 
 Purpose:
 Let a user inspect recent reminder delivery events.
@@ -80,7 +113,7 @@ Out of scope:
 - analytics;
 - exports.
 
-### DIREM-024 - Retry Policy MVP
+### DIREM-025 - Retry Policy MVP
 
 Purpose:
 Handle failed Telegram sends more deliberately than logging and recording once.
@@ -94,7 +127,7 @@ Out of scope:
 - exponential backoff platform;
 - Redis/Celery unless separately approved.
 
-### DIREM-025 - Reminder Editing
+### DIREM-026 - Reminder Editing
 
 Purpose:
 Allow changing existing reminder title/message/schedule without delete-and-recreate.
@@ -108,7 +141,7 @@ Out of scope:
 - bulk editing;
 - web UI.
 
-### DIREM-026 - Reminder Details View
+### DIREM-027 - Reminder Details View
 
 Purpose:
 Show one reminder in a clearer focused view before heavier editing arrives.
