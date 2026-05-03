@@ -132,7 +132,7 @@ Example:
 Create reminder.
 
 Send a short title.
-Example: Dorpheus focus
+Example: Morning focus
 ```
 
 ### 4.2. Title input
@@ -251,7 +251,7 @@ Before saving, bot shows summary:
 ```text
 Create reminder?
 
-Title: Dorpheus focus
+Title: Morning focus
 Message: Вернись к текущему шагу.
 Schedule: every 45 minutes
 Timezone: Asia/Almaty
@@ -531,7 +531,7 @@ Asia/Almaty
 Create:
 
 ```text
-Title: Dorpheus focus
+Title: Morning focus
 Message: Вернись к текущему шагу.
 Schedule: interval 45
 Active window: 10:00-18:00

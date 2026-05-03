@@ -50,7 +50,7 @@ async def test_create_interval_reminder_uses_user_timezone_and_active_status(ses
         created = await service.create_reminder(
             user,
             CreateReminderRequest(
-                title="Dorpheus focus",
+                title="Morning focus",
                 message_text="Return to the current step.",
                 schedule_type=ScheduleType.INTERVAL.value,
                 interval_minutes=45,

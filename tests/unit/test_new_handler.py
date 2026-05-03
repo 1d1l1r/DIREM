@@ -62,7 +62,7 @@ def test_callback_queries_receive_database_session_middleware() -> None:
 async def test_confirm_create_persists_reminder_and_clears_state(session_factory) -> None:
     state = FakeState(
         {
-            "title": "Dorpheus focus",
+            "title": "Morning focus",
             "message_text": "Return to the current step.",
             "schedule_type": "interval",
             "interval_minutes": 45,
@@ -84,4 +84,4 @@ async def test_confirm_create_persists_reminder_and_clears_state(session_factory
     assert callback.answered is True
     assert callback.message.answers[0].startswith("Reminder created.")
     assert len(reminders) == 1
-    assert reminders[0].title == "Dorpheus focus"
+    assert reminders[0].title == "Morning focus"

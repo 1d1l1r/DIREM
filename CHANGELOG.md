@@ -6,6 +6,9 @@
 - Lightweight localized first-run onboarding after `/start`.
 - Lightweight `/timezone` picker with common timezone buttons while preserving manual IANA input.
 
+### Changed
+- Removed stale `Dorpheus` references from DIREM examples and tests.
+
 ## [0.1.0] - 2026-04-29
 
 ### Added
