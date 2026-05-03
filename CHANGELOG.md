@@ -5,6 +5,7 @@
 ### Added
 - Lightweight localized first-run onboarding after `/start`.
 - Lightweight `/timezone` picker with common timezone buttons while preserving manual IANA input.
+- Localized Telegram main menu and navigation hubs for reminders, settings and help.
 
 ### Changed
 - Removed stale `Dorpheus` references from DIREM examples and tests.

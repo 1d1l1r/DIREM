@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from direm.bot.handlers import cancel, credits, delete, help, language, list, new, pause_resume, start, timezone, version
+from direm.bot.handlers import cancel, credits, delete, help, language, list, menu, new, pause_resume, start, timezone, version
 from direm.bot.middlewares import DatabaseSessionMiddleware
 
 
@@ -10,6 +10,7 @@ def build_router() -> Router:
     router.callback_query.middleware(DatabaseSessionMiddleware())
     router.include_router(cancel.router)
     router.include_router(start.router)
+    router.include_router(menu.router)
     router.include_router(help.router)
     router.include_router(language.router)
     router.include_router(timezone.router)
