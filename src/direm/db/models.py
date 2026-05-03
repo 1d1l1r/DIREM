@@ -1,6 +1,6 @@
 from datetime import datetime, time
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, JSON, String, Text, Time, func
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, JSON, String, Text, Time, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from direm.domain.constants import DeliveryStatus, ReminderStatus
@@ -17,6 +17,8 @@ class User(Base):
     first_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     timezone: Mapped[str] = mapped_column(String(64), default="UTC", nullable=False)
     language_code: Mapped[str] = mapped_column(String(8), default="ru", nullable=False)
+    bunker_active: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", nullable=False)
+    bunker_activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
