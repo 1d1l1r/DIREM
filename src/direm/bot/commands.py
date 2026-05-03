@@ -11,6 +11,7 @@ COMMANDS: tuple[tuple[str, str], ...] = (
     ("pause", "Pause reminder"),
     ("resume", "Resume reminder"),
     ("delete", "Delete reminder"),
+    ("bunker", "Toggle Bunker mode"),
     ("version", "Show version"),
     ("credits", "Show credits"),
     ("cancel", "Cancel current action"),

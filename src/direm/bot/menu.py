@@ -7,6 +7,7 @@ MENU_HOME = "menu:home"
 MENU_LIST = "menu:list"
 MENU_SETTINGS = "menu:settings"
 MENU_HELP = "menu:help"
+MENU_BUNKER = "menu:bunker"
 
 MENU_ADD = "menu:action:new"
 MENU_PAUSE = "menu:action:pause"
@@ -18,18 +19,30 @@ MENU_VERSION = "menu:action:version"
 MENU_CREDITS = "menu:action:credits"
 
 
-def render_main_menu_text(language_code: str | None, timezone: str) -> str:
-    return t(language_code, "menu.main", timezone=timezone, language=language_name(language_code))
+def render_main_menu_text(language_code: str | None, timezone: str, *, bunker_active: bool = False) -> str:
+    return t(
+        language_code,
+        "menu.main",
+        timezone=timezone,
+        language=language_name(language_code),
+        bunker_status=t(language_code, "bunker.status_active" if bunker_active else "bunker.status_inactive"),
+    )
 
 
-def main_menu_keyboard(language_code: str | None = None) -> InlineKeyboardMarkup:
+def main_menu_keyboard(language_code: str | None = None, *, bunker_active: bool = False) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(text=t(language_code, "menu.button.list"), callback_data=MENU_LIST),
                 InlineKeyboardButton(text=t(language_code, "menu.button.settings"), callback_data=MENU_SETTINGS),
                 InlineKeyboardButton(text=t(language_code, "menu.button.help"), callback_data=MENU_HELP),
-            ]
+            ],
+            [
+                InlineKeyboardButton(
+                    text=t(language_code, "menu.button.bunker_active" if bunker_active else "menu.button.bunker_inactive"),
+                    callback_data=MENU_BUNKER,
+                )
+            ],
         ]
     )
 

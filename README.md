@@ -80,6 +80,7 @@ Available in this Core MVP:
 - `/pause`
 - `/resume`
 - `/delete`
+- `/bunker`
 - `/version`
 - `/credits`
 - `/cancel`
@@ -130,10 +131,13 @@ Implemented reminder creation:
 - `/pause` marks active reminders as paused using inline buttons or manual number/id input
 - `/resume` marks paused reminders as active and recalculates `next_run_at` using inline buttons or manual number/id input
 - `/delete` deletes reminder records for the current Telegram user after confirmation, using inline buttons or manual number/id input
+- `/bunker` temporarily suppresses delivery for the current Telegram user without deleting reminders or rewriting reminder statuses
+- turning Bunker off reschedules active reminders to avoid catch-up delivery storms
 
 Implemented worker delivery MVP:
 
 - worker polls due active reminders where `next_run_at <= now`
+- reminders owned by Bunker-active users are suppressed without Telegram sends, delivery records or `next_run_at` updates
 - paused and deleted reminders are skipped
 - messages are sent to the persisted Telegram `chat_id`
 - successful sends create `reminder_deliveries` records
@@ -141,7 +145,7 @@ Implemented worker delivery MVP:
 - successful sends advance `next_run_at` using the user's timezone and domain schedule functions
 - delivery message wrapper text uses the user's selected interface language
 
-Retries, AI translation, delivery history commands, dashboards, webhook mode and reminder editing are still not implemented.
+Timed Bunker, per-reminder snooze, Bunker history, retries, AI translation, delivery history commands, dashboards, webhook mode and reminder editing are still not implemented.
 
 ## Release Readiness
 
@@ -165,7 +169,7 @@ Runtime smoke summary:
 6. Restart runtime services after migrations: `docker compose restart bot worker`.
 7. Send `/start`.
 8. For a fresh Telegram user or reset local database, verify `/start` shows first-run guidance toward `/language`, `/timezone`, `/new` and `/help`.
-9. Check that Telegram shows the command menu with `/language` and `/cancel`.
+9. Check that Telegram shows the command menu with `/language`, `/bunker` and `/cancel`.
 10. Send `/language`, choose Қазақша, then verify `/help` is in Kazakh.
 11. Send `/language`, choose English, then verify `/help` is in English.
 12. Send `/language`, choose Русский, then verify `/help` is in Russian.
@@ -175,25 +179,28 @@ Runtime smoke summary:
 16. Send `/start`, tap Settings, then Timezone, then `/cancel`.
 17. Send `/start`, tap Help, then DIREM version.
 18. Send `/start`, tap Help, then Credits.
-19. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
-20. Send `/timezone`, tap `Asia/Almaty`, then verify it is saved.
-21. Send `/timezone`, tap manual input, send `Europe/London`, then verify it is saved.
-22. Send `/timezone`, send an invalid timezone, then verify the recovery text is clear and `/cancel` exits.
-23. Set `/timezone` back to `Asia/Almaty`.
-24. Create a near-due reminder through `/new`.
-25. Wait for worker delivery.
-26. Check `/list` and verify `next_run_at` advanced.
-27. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
-28. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
-29. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
-30. Verify the deleted reminder disappears from `/list`.
+19. Send `/start`, tap Bunker, activate Bunker, then verify `/start` shows Bunker active.
+20. While Bunker is active, keep or create an active due reminder and verify worker does not send it.
+21. Send `/bunker`, deactivate Bunker, then verify active reminders are rescheduled without catch-up delivery.
+22. Start `/new`, verify the localized Cancel reply button appears, tap it and verify the flow exits.
+23. Send `/timezone`, tap `Asia/Almaty`, then verify it is saved.
+24. Send `/timezone`, tap manual input, send `Europe/London`, then verify it is saved.
+25. Send `/timezone`, send an invalid timezone, then verify the recovery text is clear and `/cancel` exits.
+26. Set `/timezone` back to `Asia/Almaty`.
+27. Create a near-due reminder through `/new`.
+28. Wait for worker delivery.
+29. Check `/list` and verify `next_run_at` advanced.
+30. Use `/pause`, tap an inline reminder button, then verify `/list` shows it paused.
+31. Use `/resume`, tap an inline reminder button, then verify `/list` shows it active.
+32. Use `/delete`, tap a reminder button, cancel once, then repeat and confirm deletion.
+33. Verify the deleted reminder disappears from `/list`.
 
 Expected:
 
 - bot answers available shell and setup commands;
 - first-time `/start` shows lightweight guidance without forcing a tutorial;
-- existing-user `/start` shows a localized main menu with List, Settings and Help hubs;
-- Telegram command menu shows current commands including `/language` and `/cancel`;
+- existing-user `/start` shows a localized main menu with List, Settings, Help and Bunker entry/state;
+- Telegram command menu shows current commands including `/language`, `/bunker` and `/cancel`;
 - `/language` changes persisted interface language between Russian, Kazakh and English;
 - `/timezone` supports common timezone buttons and manual IANA input;
 - reminder title/message text is not auto-translated;
@@ -202,6 +209,7 @@ Expected:
 - `/list` shows reminder records for the current Telegram user;
 - `/pause` and `/resume` inline buttons update reminder status for the current Telegram user;
 - `/delete` inline confirmation removes reminder records from the current Telegram user's list;
+- `/bunker` suppresses reminder delivery for the current Telegram user and reschedules active reminders on exit;
 - worker sends due active reminders with basic MVP delivery behavior;
 - worker does not implement retries, delivery history commands, dashboards or webhook mode;
 - db container stays healthy;

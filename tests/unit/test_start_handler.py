@@ -78,6 +78,7 @@ async def test_start_keeps_existing_user_non_intrusive(session_factory) -> None:
     assert keyboard.inline_keyboard[0][0].callback_data == "menu:list"
     assert keyboard.inline_keyboard[0][1].callback_data == "menu:settings"
     assert keyboard.inline_keyboard[0][2].callback_data == "menu:help"
+    assert keyboard.inline_keyboard[1][0].callback_data == "menu:bunker"
 
 
 @pytest.mark.parametrize(

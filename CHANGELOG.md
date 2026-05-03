@@ -8,6 +8,8 @@
 - Localized Telegram main menu and navigation hubs for reminders, settings and help.
 - Internal user-level Bunker state foundation for future global reminder suppression.
 - Worker-side suppression for reminders owned by users with active Bunker state.
+- Telegram Bunker Mode UX for temporarily suppressing reminder delivery.
+- Bunker deactivation rescheduling to avoid catch-up reminder storms.
 
 ### Changed
 - Removed stale `Dorpheus` references from DIREM examples and tests.
