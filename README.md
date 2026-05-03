@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/direm-readme-hero.png" alt="DIREM" width="720">
+</p>
+
 # DIREM
 
 DIREM is a Telegram-first system for regular returns to intention.
